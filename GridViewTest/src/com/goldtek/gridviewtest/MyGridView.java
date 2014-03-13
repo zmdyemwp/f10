@@ -15,8 +15,6 @@ public class MyGridView extends Activity {
         setContentView(R.layout.activity_main);
 
         PhotoAdapter pa = new PhotoAdapter(this);
-        pa.RefreshFiles();
-        pa.ShowAll();
         gv = (GridView)findViewById(R.id.gridView1); 
         gv.setAdapter(pa);
     }

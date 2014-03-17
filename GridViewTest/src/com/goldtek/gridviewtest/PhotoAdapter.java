@@ -101,6 +101,10 @@ public class PhotoAdapter extends BaseAdapter {
 				if(exif.hasThumbnail()) {
 					Log.d(tag, "Thumbnail INSIDE the jpeg");
 					byte[] thumbnail = exif.getThumbnail();
+					if(null == thumbnail) {
+						Log.d(tag, "CreateThumbnail()::ExifInterface.getThumbnail() return NULL");
+						return null;
+					}
 					return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(thumbnail, 0, thumbnail.length)
 													, width, height, true);
 				}
@@ -109,22 +113,38 @@ public class PhotoAdapter extends BaseAdapter {
 			}
 			Log.d(tag, "CreateThumbnail()::"+f.toString());
 			Bitmap bitmap = BitmapFactory.decodeFile(f.toString());
+			if(null == bitmap) {
+				Log.d(tag, "CreateThumbnail()::BitmapFactory() return NULL");
+				return null;
+			}
 			return Bitmap.createScaledBitmap(bitmap, width, height, true);
 		}
 
+		private final String[] Image_Formats =  new String[] {"jpg", "png", "gif","jpeg"};
 		private class DcimImageFileFilter implements FilenameFilter {
 
 			@Override
 			public boolean accept(File dir, String filename) {
 				// TODO Auto-generated method stub
 				if( !dir.toString().contains("/.")) {
-					return true;
+					if(dir.isDirectory()) {
+						return true; 
+					}
+					for(String ext:Image_Formats) {
+						if(filename.contains(ext)) {
+							Log.d(tag, String.format("\"%s\" do contain \"%s\"", filename, ext));
+							return true;
+						} else {
+							Log.d(tag, String.format("\"%s\" do NOT contain \"%s\"", filename, ext));
+						}
+					}
 				}
 				return false;
 			}
 			
 		}
 
+		private static final boolean bDefPath = true;
 		private void RetrieveImageFiles() {
 			RetrieveImageFiles(null);
 		}
@@ -133,9 +153,13 @@ public class PhotoAdapter extends BaseAdapter {
 				File dir;
 				if(null == path) {
 					photokeys.clear();
-					dir = Environment.getExternalStoragePublicDirectory(
-				            Environment.DIRECTORY_DCIM);
-					//dir = new File("storage/sdcard1/CozyCamera");
+					if(bDefPath) {
+						dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+						Log.d(tag, "RetrieveImageFiles"+dir.toString());
+					} else {
+						//	Test directory
+						dir = new File("/sdcard/CozyCamera");
+					}
 				} else {
 					dir = new File(path);
 				}
@@ -143,11 +167,15 @@ public class PhotoAdapter extends BaseAdapter {
 				if(null != photolist) {
 					for(File f:photolist) {
 						if(f.isDirectory()) {
+							Log.d(tag, "RetrieveImageFiles()::Subdirectory::"+f.toString());
 							RetrieveImageFiles(f.toString());
 						} else {
+							Log.d(tag, "RetrieveImageFiles()::Image File::"+f.toString());
 							photokeys.add(0,f);
 						}
 					}
+				} else {
+					Log.d(tag, "RetrieveImageFiles()::photolist is NULL");
 				}
 			} catch (Throwable e) {
 				Log.d(tag, e.getLocalizedMessage());
@@ -157,10 +185,13 @@ public class PhotoAdapter extends BaseAdapter {
 		void UpdateImageMap() {
 			if(0 == photomap.size()) {
 				for(File f:photokeys) {
-					photomap.put(f.toString(), CreateThumbnail(f));
-					imgCount++;
-					Log.d(tag, "UpdateImageMap");
-					this.publishProgress();
+					Bitmap t = CreateThumbnail(f);
+					if(null != t) {
+						photomap.put(f.toString(), t);
+						imgCount++;
+						Log.d(tag, "UpdateImageMap");
+						this.publishProgress();
+					}
 				}
 			} else {
 				//	TODO: check and add new image or remove old image
@@ -190,10 +221,14 @@ public class PhotoAdapter extends BaseAdapter {
 
 		private int RefreshFiles() {
 			Log.d(tag, "RefreshFiles()");
-			//	TODO: get file name list
-			RetrieveImageFiles();
-			//	TODO: create/modify image map
-			UpdateImageMap();
+			try {
+				//	TODO: get file name list
+				RetrieveImageFiles();
+				//	TODO: create/modify image map
+				UpdateImageMap();
+			} catch(Throwable e) {
+				Log.d(tag, e.getLocalizedMessage());
+			}
 
 			return photokeys.size();
 		}

@@ -19,7 +19,6 @@ public class MainActivity extends Activity {
         	FragmentManager fragmentManager = getFragmentManager();
 	        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 	        fragmentTransaction.add(R.id.fragment1, new MainPage()).commit();
-
         } catch(Throwable e) {
         	Log.d(tag, e.getLocalizedMessage());
         }

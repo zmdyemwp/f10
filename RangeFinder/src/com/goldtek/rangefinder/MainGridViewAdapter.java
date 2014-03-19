@@ -5,11 +5,16 @@ import java.util.Map;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 
 public class MainGridViewAdapter extends BaseAdapter {
 
@@ -20,10 +25,10 @@ public class MainGridViewAdapter extends BaseAdapter {
 		"11:22:33:44:55:66",
 		"00:00:00:00:00:00",
 	};
-	private static final String ext_image = "#image_uri";
-	private static final String ext_name = "#filename";
+
 	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dev_default";
-	private static final String Pref_Name = "RangerPref";
+	private static final String DEV_NAME = "NamePref";
+	private static final String DEV_IMAGE = "ImagePref";
 
 	private static int total = 0;
 	/************************************************************************/
@@ -61,6 +66,8 @@ public class MainGridViewAdapter extends BaseAdapter {
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			v = inflater.inflate(R.layout.dev_item, null);
 		}
+		((ImageView)v.findViewById(R.id.imageView1))
+			.setImageBitmap(finders.get(position).getThumbnail());
 		
 		return v;
 	}
@@ -80,13 +87,29 @@ public class MainGridViewAdapter extends BaseAdapter {
 	ArrayList<ItemDetail> finders = new ArrayList<ItemDetail>();
 
 	private class ItemDetail {
-		String mac;
-		String name;
-		String image;
+		private static final String tag = "ItemDetail";
+		String mac = null;
+		String name = null;
+		String image = null;
+		Bitmap thumbnail = null;
 		public ItemDetail(String mac_address, String device_name, String image_uri) {
 			mac = mac_address;
 			name = device_name;
 			image = image_uri;
+			//	this is not a good place to do such time consumptive work
+			createThumbnail();
+		}
+		private void createThumbnail() {
+			if(0 == image.length() || null == image) {
+				try {
+					MediaStore.Images.Media.getBitmap(	c.getContentResolver(),
+														Uri.parse(defaultImgUri));
+				} catch(Throwable e) {
+					Log.d(tag, e.getLocalizedMessage());
+				}
+			} else {
+				
+			}
 		}
 		public String getMac() {
 			return mac;
@@ -97,31 +120,42 @@ public class MainGridViewAdapter extends BaseAdapter {
 		public String getImage() {
 			return image;
 		}
+		public Bitmap getThumbnail() {
+			return thumbnail;
+		}
 	}
 
 	private class FinderListBuilder extends AsyncTask<Void,Void,Void> {
 
 		@Override
 		protected Void doInBackground(Void... params) {
-			// TODO retrieve information in shared preference
-			SharedPreferences devices = c.getSharedPreferences(Pref_Name, 0);
-			Map<String, ?> devs = devices.getAll();
-			if(0 == devs.size()) {
-				//	TODO: it needs initialization
-				SharedPreferences.Editor se = devices.edit();
-				for(String s:testmac) {
-					se.putString(s+ext_image, "android.resource://com.goldtek.rangefinder/drawable/dev_default");
-					se.putString(s+ext_name, "Range Finder");
-					se.commit();
+			SharedPreferences devName = c.getSharedPreferences(DEV_NAME, 0);
+			SharedPreferences devImage = c.getSharedPreferences(DEV_IMAGE, 0);
+
+			{
+				//	TODO: for TEST only, initialize the shared preference
+				Map<String, ?> devs = devImage.getAll();
+				if(0 == devs.size()) {
+					//	TODO: it needs initialization
+					SharedPreferences.Editor se = devImage.edit();
+					for(String s:testmac) {
+						se.putString(s, "android.resource://com.goldtek.rangefinder/drawable/dev_default");
+						se.commit();
+					}
 				}
-				devs = devices.getAll();
 			}
-			//	TODO: restore settings from shared preference
-			total = devs.size()/2;
-			for(Map.Entry<String, ?> e:devs.entrySet()) {
-				
+
+			//	TODO: scan for all devices around,
+			//		and restore settings from shared preference
+			//		NOW use test data!
+			finders.clear();
+			for(String s:testmac) {
+				finders.add(
+					new ItemDetail(	s, devName.getString(s,""), devImage.getString(s,""))
+				);
+				total = finders.size();
+				this.publishProgress();
 			}
-			
 			return null;
 		}
 		

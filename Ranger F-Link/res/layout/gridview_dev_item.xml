@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
-        android:src="@drawable/dev_default" />
+        android:src="@drawable/dev_default" android:contentDescription="@string/app_name" />
 
     <TextView
         android:id="@+id/textView1"

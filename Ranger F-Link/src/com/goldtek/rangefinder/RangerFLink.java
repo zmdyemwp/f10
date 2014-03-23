@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +31,11 @@ public class RangerFLink extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        image_width = 360;//findViewById(R.id.fragment1).getWidth()/3;
+        //image_width = 320;
+        DisplayMetrics dm = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(dm);
+        image_width = dm.widthPixels/3;
+        Log.d(tag, "Metrics::widthPixels := "+dm.widthPixels);
         try {
         	new RangerFLink.FinderListBuilder().execute();
         	FragmentManager fragmentManager = getFragmentManager();

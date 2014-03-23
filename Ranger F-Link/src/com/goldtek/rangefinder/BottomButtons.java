@@ -18,6 +18,7 @@ public class BottomButtons extends Fragment {
 		View result = inflater.inflate(R.layout.bottom_buttons, container, false);
 		result.findViewById(R.id.button1).setOnClickListener(switch2Main);
 		result.findViewById(R.id.button2).setOnClickListener(switch2List);
+		result.findViewById(R.id.button3).setOnClickListener(back);
 		return result;
 	}
 	
@@ -31,6 +32,8 @@ public class BottomButtons extends Fragment {
 			} else {
 				//	TODO: Goto MainPage
 				FragmentManager fmgr = getFragmentManager();
+				fmgr.popBackStack(ListPage.tag, 0);
+				fmgr.popBackStack(MainPage.tag, 0);
 				FragmentTransaction ftran = fmgr.beginTransaction();
 				ftran.replace(R.id.fragment1, new MainPage());
 				ftran.commit();
@@ -48,6 +51,8 @@ public class BottomButtons extends Fragment {
 			} else {
 				//	TODO: Goto ListPage
 				FragmentManager fmgr = getFragmentManager();
+				fmgr.popBackStack(MainPage.tag, 0);
+				fmgr.popBackStack(ListPage.tag, 0);
 				FragmentTransaction ftran = fmgr.beginTransaction();
 				ftran.replace(R.id.fragment1, new ListPage());
 				ftran.commit();

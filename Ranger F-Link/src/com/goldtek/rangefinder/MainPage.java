@@ -2,7 +2,10 @@ package com.goldtek.rangefinder;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +15,8 @@ import android.widget.GridView;
 
 public class MainPage extends Fragment {
 
+	public static final String tag = "MainPage";
+	
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		((RangerFLink)activity).setCurrentFragment(this);
@@ -30,15 +35,20 @@ public class MainPage extends Fragment {
 	public void onDestroyView() {
 		super.onDestroyView();
 	}
-	
+
 	AbsListView.OnItemClickListener onClick =
 			new AbsListView.OnItemClickListener() {
 
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
+					Log.d(tag, String.format("onItemClick(%d)", arg2));
 					// TODO Auto-generated method stub
-					
+					FragmentManager fm = getActivity().getFragmentManager();
+					FragmentTransaction tran = fm.beginTransaction();
+					tran.replace(R.id.fragment1, new ItemDetailPage(arg2));
+					tran.addToBackStack(tag);
+					tran.commit();
 				}
 			};
 

@@ -23,7 +23,7 @@ import android.widget.BaseAdapter;
 
 public class RangerFLink extends Activity {
 	static final String tag = "Ranger F-Link";
-	private int image_width = 0;
+	public static int image_width = 0;
 	Fragment currentFragment = null;
 	/*************************************************************************/
 
@@ -90,11 +90,13 @@ public class RangerFLink extends Activity {
 		"ff:ee:dd:cc:bb:aa",
 		"11:22:33:44:55:66",
 		"00:00:00:00:00:00",
+		"12:23:34:45:56:67",
+		"12:23:34:45:56:69",
 	};
 
     public static final String DEV_NAME = "NamePref";
 	public static final String DEV_IMAGE = "ImagePref";
-	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dev_default";
+	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dog144";
 	private static int total = 0;
 	public static ArrayList<ItemDetail> finders = new ArrayList<ItemDetail>();
 
@@ -111,6 +113,7 @@ public class RangerFLink extends Activity {
 			mac = mac_address;
 			name = device_name;
 			image = image_uri;
+			Log.d(tag, String.format("new ItemDetail(%s,%s,%s)", mac,name,image));
 			//	this is not a good place to do such time consumptive work
 			createThumbnail();
 		}
@@ -144,6 +147,25 @@ public class RangerFLink extends Activity {
 		public Bitmap getThumbnail() {
 			return thumbnail;
 		}
+		
+		public void SetName(String s) {
+			name = s;
+			SharedPreferences devName = getSharedPreferences(DEV_NAME, 0);
+			SharedPreferences.Editor se = devName.edit();
+			se.putString(mac, name).commit();
+		}
+		
+		public void SetImage(String s) {
+			image = s;
+			SharedPreferences devImage = getSharedPreferences(DEV_IMAGE, 0);
+			SharedPreferences.Editor se = devImage.edit();
+			se.putString(mac, image).commit();
+			Log.d(tag, "ItemDetail.SetImage()::"+s);
+		}
+		
+		public void SetThumbnail(Bitmap b) {
+			thumbnail = b;
+		}
 	}
 
 	private class FinderListBuilder extends AsyncTask<Void,Void,Void> {
@@ -156,6 +178,7 @@ public class RangerFLink extends Activity {
 				//	TODO: for TEST only, initialize the shared preference
 				Map<String, ?> devs = devImage.getAll();
 				if(0 == devs.size()) {
+					Log.d(tag, "XXXXXXXXXXXXXXXXXX");
 					//	TODO: it needs initialization
 					SharedPreferences.Editor se = devImage.edit();
 					for(String s:testmac) {

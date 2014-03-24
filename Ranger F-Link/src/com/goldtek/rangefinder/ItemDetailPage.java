@@ -52,7 +52,7 @@ public class ItemDetailPage extends Fragment {
 			// TODO Auto-generated method stub
 			FragmentManager fm = getFragmentManager();
 			FragmentTransaction ft = fm.beginTransaction();
-			ft.replace(R.id.fragment1, new ItemEditPage());
+			ft.replace(R.id.fragment1, new ItemEditPage(index));
 			ft.addToBackStack(null);
 			ft.commit();
 		}

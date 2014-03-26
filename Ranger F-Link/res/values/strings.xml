@@ -15,5 +15,10 @@
         All Rights Reserved\n\n\
         v0.01</string>
 
+    <string name="find_it">Find It</string>
+    <string name="camera_roll">Camera Roll</string>
+    <string name="gallery">Gallery</string>
+    <string name="apply">Apply</string>
+    
 </resources>
 

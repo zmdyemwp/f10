@@ -86,17 +86,23 @@ public class RangerFLink extends Activity {
 	 * 
 	 * **/
     private static final String[] testmac = {
-		"aa:bb:cc:dd:ee:ff",
+    	"aa:bb:cc:dd:ee:ff",
 		"ff:ee:dd:cc:bb:aa",
 		"11:22:33:44:55:66",
 		"00:00:00:00:00:00",
 		"12:23:34:45:56:67",
 		"12:23:34:45:56:69",
+		"ff:bb:cc:dd:ee:ff",
+		"ff:ee:dd:cc:bb:ff",
+		"11:22:33:44:55:ff",
+		"00:00:00:00:00:ff",
+		"12:23:34:45:56:ff",
+		"12:23:34:45:56:ff",
 	};
 
     public static final String DEV_NAME = "NamePref";
 	public static final String DEV_IMAGE = "ImagePref";
-	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dog144";
+	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dev_default";
 	private static int total = 0;
 	public static ArrayList<ItemDetail> finders = new ArrayList<ItemDetail>();
 

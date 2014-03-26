@@ -1,12 +1,9 @@
 package com.goldtek.rangefinder;
 
-import com.goldtek.rangefinder.RangerFLink.ItemDetail;
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,12 +13,22 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
+import com.goldtek.rangefinder.RangerFLink.ItemDetail;
+
 public class GalleryPage extends Fragment {
-	public static final String tag = "GalleryPage";
-	private int index = -1;
+
+	private static final String tag = "GalleryPage";
 	
-	public GalleryPage(int i) {
-		index = i;
+	public static GalleryPage newInstance(int i) {
+		GalleryPage f = new GalleryPage();
+		Bundle b = new Bundle();
+		b.putInt("index", i);
+		f.setArguments(b);
+		return f;
+	}
+	
+	int getIndex() {
+		return this.getArguments().getInt("index");
 	}
 	
 	public void onAttach(Activity activity) {
@@ -46,29 +53,20 @@ public class GalleryPage extends Fragment {
 		return v;
 	}
 	
-	@Override
-	public void onDestroyView() {
-		super.onDestroyView();
-	}
-
 	AbsListView.OnItemClickListener onClick =
 			new AbsListView.OnItemClickListener() {
 
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
-					Log.d(tag, String.format("onItemClick(%d)", arg2));
-					
-					ga.StopLoading();
-					if(index >= 0) {
-						ItemDetail i = RangerFLink.finders.get(index);
-						i.SetThumbnail((Bitmap)ga.getItem(arg2));
-						i.SetImage(ga.getBitmapUri(arg2).toString());
-						
-					}
 					// TODO Auto-generated method stub
+					if(getIndex() >= 0) {
+						ItemDetail i = RangerFLink.finders.get(getIndex());
+						i.SetThumbnail(ga.createBitmap(arg2));
+						i.SetImage(ga.getUriString(arg2));
+					}
 					FragmentManager fm = getActivity().getFragmentManager();
 					fm.popBackStack();
 				}
-			};
+	};
 }

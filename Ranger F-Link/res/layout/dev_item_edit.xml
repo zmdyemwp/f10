@@ -3,6 +3,11 @@
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:background="@color/light_blue"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -31,18 +36,25 @@
             android:orientation="vertical" >
 
             <Button
-                android:id="@+id/default_icon"
+                android:id="@+id/camera_roll"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:layout_marginBottom="10dp"
                 android:layout_weight="1"
-                android:gravity="fill_vertical|fill_horizontal" />
+                android:background="@drawable/blue_button"
+                android:gravity="center_vertical|center_horizontal"
+                android:text="@string/camera_roll"
+                android:textColor="@color/button_text_color" />
 
             <Button
                 android:id="@+id/gallery"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:gravity="fill_vertical|fill_horizontal" />
+                android:background="@drawable/blue_button"
+                android:gravity="center_vertical|center_horizontal"
+                android:text="@string/gallery"
+                android:textColor="@color/button_text_color" />
 
         </LinearLayout>
 
@@ -52,9 +64,12 @@
         android:id="@+id/dev_name"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="1"
+        android:background="@drawable/round_rect"
         android:ems="10"
-        android:gravity="fill_vertical|fill_horizontal"
+        android:gravity="center"
         android:inputType="text" >
 
         <requestFocus />
@@ -65,7 +80,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:gravity="fill_vertical|fill_horizontal" />
+        android:background="@drawable/blue_button"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="@string/apply"
+        android:textColor="@color/button_text_color" />
 
     <Space
         android:layout_width="match_parent"

@@ -10,19 +10,23 @@ import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.Toast;
@@ -39,6 +43,7 @@ public class RangerFLink extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         devImage = getSharedPreferences(DEV_IMAGE, 0);
+        devName = getSharedPreferences(DEV_NAME, 0);
         //	Bluetooth
      	//	Use this check to determine whether BLE is supported on the device.  Then you can
         //	selectively disable BLE-related features.
@@ -77,6 +82,18 @@ public class RangerFLink extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+        
+        if( !MainPage.class.equals(currentFragment.getClass())) {
+        	Log.d(tag, "CURRENT FRAGMENT: "+currentFragment.getClass());
+        	menu.findItem(R.id.action_scanning).setVisible(false);
+        	menu.findItem(R.id.action_stop_scanning).setVisible(false);
+        } else if(mScanning) {
+        	menu.findItem(R.id.action_scanning).setVisible(false);
+        	menu.findItem(R.id.action_stop_scanning).setVisible(true);
+        } else {
+        	menu.findItem(R.id.action_scanning).setVisible(true);
+        	menu.findItem(R.id.action_stop_scanning).setVisible(false);
+        }
     	/*AlertDialog.Builder ab = new AlertDialog.Builder(this);
         ab.setMessage("TEst");
         ab.create().show();*/
@@ -85,12 +102,24 @@ public class RangerFLink extends Activity {
     
     @Override
     public boolean onOptionsItemSelected (MenuItem item) {
-    	AlertDialog.Builder ab = new AlertDialog.Builder(this);
-        ab.setMessage(this.getResources().getString(R.string.version));
-        ab.create().show();
+    	if(R.id.action_settings == item.getItemId()) {
+	    	AlertDialog.Builder ab = new AlertDialog.Builder(this);
+	        ab.setMessage(this.getResources().getString(R.string.version));
+	        ab.create().show();
+    	} else if(R.id.action_scanning == item.getItemId()) {
+    		this.scanLeDevice(true);
+    	} else if(R.id.action_stop_scanning == item.getItemId()) {
+    		this.scanLeDevice(false);
+    	}
         return true;
     }
 
+    @Override
+    public void onBackPressed() {
+    	super.onBackPressed();
+    	//this.moveTaskToBack(true);
+    }
+    
     @Override
     protected void onResume() {
     	super.onResume();
@@ -101,10 +130,20 @@ public class RangerFLink extends Activity {
         } else {
         	Log.d(tag, "onResume()::Bluetooth is ready to use!");
         }
-
+    	//	Scan BLE devices
     	scanLeDevice(true);
+    	//	Connect to BLE service
+    	this.bindBleService();
     }
-
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        this.unbindBleService();
+        scanLeDevice(false);
+        finders.clear();
+	}
+    
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // User chose not to enable Bluetooth.
@@ -117,6 +156,7 @@ public class RangerFLink extends Activity {
 
     public void setCurrentFragment(Fragment f) {
     	this.currentFragment = f;
+    	this.invalidateOptionsMenu();
     }
     public Fragment getCurrentFragment() {
     	return this.currentFragment;
@@ -130,7 +170,6 @@ public class RangerFLink extends Activity {
     boolean mScanning = false;
     Handler h = new Handler();
     public void scanLeDevice(final boolean enable) {
-    	Log.d(tag, "scanLeDevice()XXXXXXXXXXXXXXXx");
         if (enable) {
             // Stops scanning after a pre-defined scan period.
         	total = 0;
@@ -194,7 +233,9 @@ public class RangerFLink extends Activity {
 	 * 
 	 * **/
 	public static final String DEV_IMAGE = "ImagePref";
+	public static final String DEV_NAME = "NamePref";
 	SharedPreferences devImage;
+	SharedPreferences devName;
 	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dev_default";
 	private static int total = 0;
 	public static ArrayList<ItemDetail> finders = new ArrayList<ItemDetail>();
@@ -227,13 +268,19 @@ public class RangerFLink extends Activity {
 		private static final String tag = "ItemDetail";
 		BluetoothDevice device;
 		String image = null;
+		String name = null;
 		Bitmap thumbnail = null;
 		public ItemDetail(BluetoothDevice dev) {
 			device = dev;
 			image = devImage.getString(device.getAddress(), defaultImgUri);
+			name = devName.getString(device.getAddress(),
+					getResources().getString(R.string.default_dev_name));
 			//	Check image settings
 			createThumbnail();
 		}
+		
+		//public ItemDetail()
+
 		private void createThumbnail() {
 			if(null == image || 0 == image.length()) {
 				image = defaultImgUri;
@@ -247,6 +294,16 @@ public class RangerFLink extends Activity {
 				Log.d(tag, "createThumbnail()::"+image);
 			} catch(Throwable e) {
 				Log.d(tag, e.getLocalizedMessage());
+				try {
+					image = defaultImgUri;
+					thumbnail = Bitmap.createScaledBitmap(
+							MediaStore.Images.Media
+							.getBitmap(	getContentResolver(),
+										Uri.parse(image)),
+										image_width,image_width,false);
+				} catch(Throwable ee) {
+					Log.d(tag, ee.getLocalizedMessage());
+				}
 			}
 		}
 		public String getMac() {
@@ -254,7 +311,8 @@ public class RangerFLink extends Activity {
 		}
 		public String getName() {
 			//return device.getName();
-			return device.getAddress();
+			//return device.getAddress();
+			return name;
 		}
 		public String getImage() {
 			return image;
@@ -265,6 +323,9 @@ public class RangerFLink extends Activity {
 		
 		public void SetName(String s) {
 			//	TODO: set device friendly name
+			name = s;
+			SharedPreferences.Editor se = devName.edit();
+			se.putString(device.getAddress(), name).commit();
 		}
 		
 		public void SetImage(String s) {
@@ -279,4 +340,47 @@ public class RangerFLink extends Activity {
 		}
 	}
 
+	
+	/*********************************************************************************************
+	 * 		ServiceConnection mServiceConnection
+	 * 		
+	 * */
+	private BluetoothLeService mBluetoothLeService;
+	private final ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+            if (!mBluetoothLeService.initialize()) {
+                Log.e(tag, "Unable to initialize Bluetooth");
+                finish();
+            }
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mBluetoothLeService = null;
+        }
+    };
+    public void bindBleService() {
+    	Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+    }
+    public void unbindBleService() {
+    	unbindService(mServiceConnection);
+    }
+    public ArrayList<String> getConnectionList() {
+    	if(null == mBluetoothLeService) {
+    		return null;
+    	} else {
+    		return mBluetoothLeService.getConnectedDevices();
+    	}
+    }
+    public void connectBleDevice(final String address) {
+    	if(null != mBluetoothLeService) {
+    		mBluetoothLeService.connect(address);
+    	}
+    }
+
+    public void disconnectBleDevice(final String address) {
+    	mBluetoothLeService.disconnect(address);
+    }
 }

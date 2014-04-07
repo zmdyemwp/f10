@@ -193,20 +193,11 @@ public class BluetoothLeService extends Service {
      *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      *         callback.
      */
-    boolean checkAddressConnected(final String address) {
-    	for(BluetoothGatt conn:mBluetoothGatts) {
-    		if(address.equals(conn.getDevice().getAddress())) {
-    			return true;
-    		}
-    	}
-    	return false;
-    }
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
-
         // Previously connected device.  Try to reconnect.
         // mBluetoothGatt object will be removed from array list.
         /*if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
@@ -220,19 +211,26 @@ public class BluetoothLeService extends Service {
             }
         }*/
 
+        for(BluetoothGatt conn:mBluetoothGatts) {
+        	if(address.equals(conn.getDevice().getAddress())) {
+        		if(conn.connect()) {
+        			mConnectionState = STATE_CONNECTING;
+        			return true;
+        		}
+        	}
+        }
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
             Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
         }
-        // We want to directly connect to the device, so we are setting the autoConnect
-        // parameter to false.
-        //mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-        mBluetoothGatts.add(device.connectGatt(this, false, mGattCallback));
-        Log.d(TAG, "Trying to create a new connection.");
-        //mBluetoothDeviceAddress = address;
-        mConnectionState = STATE_CONNECTING;
-        return true;
+        BluetoothGatt gattConn = device.connectGatt(this, false, mGattCallback); 
+        mBluetoothGatts.add(gattConn);
+        if(gattConn.connect()) {
+        	mConnectionState = STATE_CONNECTING;
+        	return true;
+        }
+        return false;
     }
 
     /**
@@ -332,4 +330,18 @@ public class BluetoothLeService extends Service {
         return conn.getServices();
     }
 
+    
+    public ArrayList<String> getConnectedDevices() {
+    	if(0 < mBluetoothGatts.size()) {
+    		ArrayList<String> result = new ArrayList<String>();
+    		List<BluetoothDevice> devs = mBluetoothManager
+    				.getConnectedDevices(BluetoothGatt.GATT);
+    		for(BluetoothDevice dev:devs) {
+    			result.add(dev.getAddress());
+    		}
+    		return result;
+    	}
+    	return null;
+    }
+    
 }

@@ -43,7 +43,10 @@ public class MainPage extends Fragment {
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
 					Log.d(tag, String.format("onItemClick(%d)", arg2));
-					// TODO Auto-generated method stub
+					// TODO: connect to device
+					((RangerFLink)getActivity()).connectBleDevice(RangerFLink.finders.get(arg2).getMac());
+					
+					// TODO: switch to device detail page
 					FragmentManager fm = getActivity().getFragmentManager();
 					FragmentTransaction tran = fm.beginTransaction();
 					tran.replace(R.id.fragment1, ItemDetailPage.newInstance(arg2));

@@ -70,7 +70,11 @@ public class BottomButtons extends Fragment {
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
 			FragmentManager fmgr = getFragmentManager();
-			fmgr.popBackStack();
+			if(0 < fmgr.getBackStackEntryCount()) {
+				fmgr.popBackStack();
+			} else {
+				getActivity().finish();
+			}
 		}
 	};
 }

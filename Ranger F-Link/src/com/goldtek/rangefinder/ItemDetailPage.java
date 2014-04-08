@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.goldtek.rangefinder.RangerFLink.ItemDetail;
+
 public class ItemDetailPage extends Fragment {
 	
 	private static final String tag = "ItemDetailPage";
@@ -40,14 +42,18 @@ public class ItemDetailPage extends Fragment {
 			Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
+				ItemDetail iDev = RangerFLink.finders.get(getIndex());
+				this.isBuzzerOn = ((RangerFLink)getActivity())
+						.getBuzzerState(iDev.getMac());
 				v = inflater.inflate(R.layout.dev_item_detail, container, false);
+				v.findViewById(R.id.dev_find).setOnClickListener(setBuzzerPower);
 				ImageView iv = (ImageView)v.findViewById(R.id.dev_icon); 
-				iv.setImageBitmap((RangerFLink.finders.get(getIndex()).getThumbnail()));
+				iv.setImageBitmap(iDev.getThumbnail());
 				iv.setOnClickListener(editItem);
 				((TextView)v.findViewById(R.id.dev_name))
 					.setText(RangerFLink.finders.get(getIndex()).getName());
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
 		}
 		return v;
@@ -63,6 +69,23 @@ public class ItemDetailPage extends Fragment {
 			ft.replace(R.id.fragment1, ItemEditPage.newInstance(getIndex()));
 			ft.addToBackStack(null);
 			ft.commit();
+		}
+	};
+	
+	
+	private boolean isBuzzerOn = false;
+	View.OnClickListener setBuzzerPower = new View.OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			if(isBuzzerOn) {
+				isBuzzerOn = false;
+			} else {
+				isBuzzerOn = true;
+			}
+			((RangerFLink)getActivity()) 
+				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), isBuzzerOn);
 		}
 	};
 }

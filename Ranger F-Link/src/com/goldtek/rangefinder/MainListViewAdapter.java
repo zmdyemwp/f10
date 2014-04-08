@@ -2,6 +2,7 @@ package com.goldtek.rangefinder;
 
 import java.util.ArrayList;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,7 +21,7 @@ public class MainListViewAdapter extends MainAdapter {
 		super(cc);
 	}
 
-	public static ArrayList<String> connectDevices;
+	public static ArrayList<BluetoothDevice> connectDevices;
 	
 	@Override
 	public int getCount() {
@@ -29,9 +30,9 @@ public class MainListViewAdapter extends MainAdapter {
 		if(null == connectDevices) {
 			return 0;
 		}
-		for(String s:connectDevices) {
-			if( ! RangerFLink.checkFinderExist(s)) {
-				connectDevices.remove(s);
+		for(BluetoothDevice dev:connectDevices) {
+			if( ! RangerFLink.checkFinderExist(dev)) {
+				connectDevices.remove(dev);
 			}
 		}
 		return connectDevices.size();
@@ -56,7 +57,7 @@ public class MainListViewAdapter extends MainAdapter {
 			v = inflater.inflate(R.layout.listview_dev_item, null);
 		}
 		try {
-			ItemDetail i = getFinder(connectDevices.get(position));
+			ItemDetail i = getFinder(connectDevices.get(position).getAddress());
 			((ImageView)v.findViewById(R.id.imageView1)).setImageBitmap(i.getThumbnail());
 			((TextView)v.findViewById(R.id.textView1)).setText(i.getName());
 		} catch(Throwable e) {

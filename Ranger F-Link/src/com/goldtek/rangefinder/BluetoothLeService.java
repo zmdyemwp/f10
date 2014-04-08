@@ -17,6 +17,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -331,17 +332,117 @@ public class BluetoothLeService extends Service {
     }
 
     
-    public ArrayList<String> getConnectedDevices() {
+    public ArrayList<BluetoothDevice> getConnectedDevices() {
     	if(0 < mBluetoothGatts.size()) {
-    		ArrayList<String> result = new ArrayList<String>();
+    		ArrayList<BluetoothDevice> result;
     		List<BluetoothDevice> devs = mBluetoothManager
     				.getConnectedDevices(BluetoothGatt.GATT);
-    		for(BluetoothDevice dev:devs) {
-    			result.add(dev.getAddress());
-    		}
+    		result = new ArrayList<BluetoothDevice>(devs);
     		return result;
     	}
     	return null;
     }
+
+    /**
+     * Retrieve characteristic tree
+     * 		GATT services
+     * 			GATT characteristics
+     * */
+    //	service-characteristic for buzzer
+    static final String IMMEDIATE_ALERT_SERVICE =
+    							"00001802-0000-1000-8000-00805f9b34fb";
+    static final String IMMEDIATE_ALERT_CHARACTERISTIC =
+    							"00002a06-0000-1000-8000-00805f9b34fb";
+    //	service-characteristic for finder
+    static final String LINK_LOSS_SERVICE =
+    							"00001803-0000-1000-8000-00805f9b34fb";
+    static final String LINK_LOSS_CHARACTERISTIC =
+    							"00002a06-0000-1000-8000-00805f9b34fb";
+
+    public void setBuzzerOnOff(final String address, boolean b) {
+    	BluetoothGatt conn = getConn(address);
+    	if(null != conn) {
+	    	byte[] buf = new byte[] {(byte)((b)?0x02:0x00), 0x00};
+	    	BluetoothGattService service = conn
+	    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
+	    	BluetoothGattCharacteristic cBuzzer = service
+	    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
+	    	cBuzzer.setValue(buf);
+	    	conn.writeCharacteristic(cBuzzer);
+    	}
+    }
     
+    public boolean getBuzzerState(final String address) {
+    	BluetoothGatt conn = getConn(address);
+    	if(null != conn) {
+	    	BluetoothGattService service = conn
+	    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
+	    	BluetoothGattCharacteristic cBuzzer = service
+	    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
+	    	conn.readCharacteristic(cBuzzer);
+	    	byte[] v = cBuzzer.getValue();
+	    	if(null != v && 0 < v[0]) {
+	    		Log.d("getBuzzerState()", String.format("0x%02x", v[0]));
+	    		return true;
+	    	}
+    	}
+    	return false;
+    }
+    
+    private void setFinder(final String address, boolean enable) {
+    	BluetoothGatt conn = getConn(address);
+    	if(null != conn) {
+	    	final byte[] bb = new byte[] {(byte)((enable)?0x02:0x00)};
+	    	BluetoothGattService service = conn
+	    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
+	    	BluetoothGattCharacteristic cFinder = service
+	    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
+	    	cFinder.setValue(bb);
+	    	conn.writeCharacteristic(cFinder);
+    	}
+    }
+    
+    public void enableFinder(final String address) {
+    	setFinder(address, true);
+    }
+    
+    public void resetFinder(final String address) {
+    	setFinder(address, false);
+    	setFinder(address, true);
+    }
+    
+    /**
+     * Lost Link List
+     * 		Keep all lost link
+     * 		try to reconnect to the device
+     * 		wait for resetting of the finder
+     * 		remove the device from lost list after reset
+     * */
+    ArrayList<BluetoothGatt> lostDev = new ArrayList<BluetoothGatt>();
+    Handler h = new Handler();
+    Runnable rReconnectThread = new Runnable(){
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			for(BluetoothGatt dev:lostDev) {
+				if( !checkDevConnected(dev.getDevice().getAddress()) ) {
+					dev.connect();
+				}
+			}
+
+			h.postDelayed(rReconnectThread, 5000);
+		}
+    	
+    };
+    
+    boolean checkDevConnected(final String address) {
+    	ArrayList<BluetoothDevice> devs = this.getConnectedDevices();
+    	for(BluetoothDevice dev:devs) {
+    		if(dev.getAddress().equals(address)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
 }

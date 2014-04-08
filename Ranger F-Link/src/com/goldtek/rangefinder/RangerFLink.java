@@ -174,6 +174,14 @@ public class RangerFLink extends Activity {
             // Stops scanning after a pre-defined scan period.
         	total = 0;
         	finders.clear();
+        	//	Add connected devices first
+        	ArrayList<BluetoothDevice> devs = getConnectionList();
+        	if(null != devs) {
+	        	for(BluetoothDevice dev:devs) {
+	        		addItem(new ItemDetail(dev));
+	        	}
+        	}
+        	//	Add scanned devices
             h.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -201,7 +209,7 @@ public class RangerFLink extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                	if(!checkFinderExist(device.getAddress())) {
+                	if(!checkFinderExist(device)) {
                 		addItem(new ItemDetail(device));
                 	}
                 	if(null != currentFragment) {
@@ -239,12 +247,12 @@ public class RangerFLink extends Activity {
 	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dev_default";
 	private static int total = 0;
 	public static ArrayList<ItemDetail> finders = new ArrayList<ItemDetail>();
-	public static boolean checkFinderExist(String address) {
+	public static boolean checkFinderExist(BluetoothDevice dev) {
 		for(ItemDetail i:finders) {
-			if(i.getMac().equalsIgnoreCase(address)) {
+			if(i.getMac().equalsIgnoreCase(dev.getAddress())) {
 				return true;
 			} else {
-				Log.d(tag, String.format("%s :: %s", i.getMac(), address));
+				Log.d(tag, String.format("%s :: %s", i.getMac(), dev.getAddress()));
 			}
 		}
 		return false;
@@ -367,13 +375,15 @@ public class RangerFLink extends Activity {
     public void unbindBleService() {
     	unbindService(mServiceConnection);
     }
-    public ArrayList<String> getConnectionList() {
+
+    public ArrayList<BluetoothDevice> getConnectionList() {
     	if(null == mBluetoothLeService) {
     		return null;
     	} else {
     		return mBluetoothLeService.getConnectedDevices();
     	}
     }
+
     public void connectBleDevice(final String address) {
     	if(null != mBluetoothLeService) {
     		mBluetoothLeService.connect(address);
@@ -381,6 +391,28 @@ public class RangerFLink extends Activity {
     }
 
     public void disconnectBleDevice(final String address) {
-    	mBluetoothLeService.disconnect(address);
+    	if(null != mBluetoothLeService) {
+    		mBluetoothLeService.disconnect(address);
+    	}
+    }
+    
+    public void buzzerOnOff(final String address, boolean b) {
+    	if(null != mBluetoothLeService) {
+    		mBluetoothLeService.setBuzzerOnOff(address, b);
+    	}
+    }
+    
+    public boolean getBuzzerState(final String address) {
+    	boolean result = false;
+    	if(null != mBluetoothLeService) {
+    		result = mBluetoothLeService.getBuzzerState(address);
+    	}
+    	return result;
+    }
+    
+    public void enableFinder(final String address) {
+    	if(null != mBluetoothLeService) {
+    		mBluetoothLeService.enableFinder(address);
+    	}
     }
 }

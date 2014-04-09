@@ -51,6 +51,12 @@ public class BluetoothLeService extends Service {
     
     public final static String LOSS_LINK_ALARM =
     		"com.goldtek.bluetooth.le.LOSS_LINK_ALARM";
+    
+    public final static String LOSS_LINK_ALARM_DISCONNECTION =
+    		"com.goldtek.bluetooth.le.LOSS_LINK_ALARM_DISCONNECTION";
+    
+    public final static String LOSS_LINK_ALARM_RECONNECTION =
+    		"com.goldtek.bluetooth.le.LOSS_LINK_ALARM_RECONNECTION";
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
@@ -68,6 +74,14 @@ public class BluetoothLeService extends Service {
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:"+gatt.discoverServices());
+                //	TODO: check if the device is belong to loss-link list
+                //			if it does, this is a reconnection
+                if(checkDevLost(gatt.getDevice().getAddress())) {
+                	Log.d("BLE service", "yyyyyyyyyyyyyyyyyyyyyyyy");
+                	broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice().getAddress(), LOSS_LINK_ALARM_RECONNECTION);
+                } else {
+                	Log.d("BLE service", "xxxxxxxxxxxxxxxxxxxxxxxx");
+                }
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
@@ -78,7 +92,7 @@ public class BluetoothLeService extends Service {
                 //			if not, this is a loss link!
                 if(checkGattExist(gatt.getDevice().getAddress())) {
                 	lostDev.add(gatt);
-                	broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice().getAddress());
+                	broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice().getAddress(), LOSS_LINK_ALARM_DISCONNECTION);
                 }
             }
         }
@@ -113,9 +127,10 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
     
-    private void broadcastUpdate(final String action, final String address) {
+    private void broadcastUpdate(final String action, final String address, final String status) {
         final Intent intent = new Intent(action);
         intent.putExtra("address", address);
+        intent.putExtra("status", status);
         sendBroadcast(intent);
     }
 
@@ -509,4 +524,14 @@ public class BluetoothLeService extends Service {
     	}
     	return result;
     }
+    
+    boolean checkDevLost(final String address) {
+    	for(BluetoothDevice dev:getLostDevices()) {
+    		if(dev.getAddress().equals(address)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
 }

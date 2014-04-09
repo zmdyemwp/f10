@@ -27,6 +27,7 @@
     <string name="scanning">Scan</string>
     <string name="stop_scanning">Stop</string>
     <string name="stop_alarm">Stop Alarm</string>
+    <string name="reconnect_confirm">Confirm</string>
     
 </resources>
 

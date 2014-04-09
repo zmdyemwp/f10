@@ -45,13 +45,32 @@ public class RangerFLink extends Activity {
 		public void onReceive(Context context, Intent intent) {
 			// TODO Auto-generated method stub
 			if(intent.getAction().equals(BluetoothLeService.LOSS_LINK_ALARM)) {
-				int index = getIndex(intent.getStringExtra("address")); 
-				if(0 <= index) {
-					FragmentManager fm = getFragmentManager();
-					FragmentTransaction tran = fm.beginTransaction();
-					tran.replace(R.id.fragment1, ItemDetailPage.newInstance(index));
-					tran.addToBackStack(null);
-					tran.commit();
+				if(intent.getStringExtra("status")
+						.equals(BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION)) {
+					int index = getIndex(intent.getStringExtra("address")); 
+					if(0 <= index) {
+						FragmentManager fm = getFragmentManager();
+						for(int i = 0; i < fm.getBackStackEntryCount();i++) {
+							fm.popBackStack();
+						}
+						FragmentTransaction tran = fm.beginTransaction();
+						tran.replace(R.id.fragment1, new MainPage());
+						tran.replace(R.id.fragment1, LossLinkNotification.newInstance(index));
+						tran.addToBackStack(null);
+						tran.commit();
+					}
+					Log.d("lossLink", "disconnection");
+				} else if(intent.getStringExtra("status")
+						.equals(BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION)) {
+					int index = getIndex(intent.getStringExtra("address")); 
+					if(0 <= index) {
+						FragmentManager fm = getFragmentManager();
+						FragmentTransaction tran = fm.beginTransaction();
+						tran.replace(R.id.fragment1, LossLinkReconnection.newInstance(index));
+						tran.addToBackStack(null);
+						tran.commit();
+					}
+					Log.d("lossLink","reconnection");
 				}
 			}
 		}
@@ -95,6 +114,8 @@ public class RangerFLink extends Activity {
         } catch(Throwable e) {
         	Log.d(tag, e.getLocalizedMessage());
         }
+        
+        scanLeDevice(true);
     }
 
 
@@ -152,7 +173,7 @@ public class RangerFLink extends Activity {
         }
 
     	//	Scan BLE devices
-    	scanLeDevice(true);
+    	//scanLeDevice(true);
     	//	Connect to BLE service
     	this.bindBleService();
     	//	Register Receiver

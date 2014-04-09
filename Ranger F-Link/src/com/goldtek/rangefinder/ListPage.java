@@ -69,7 +69,7 @@ public class ListPage extends Fragment {
 					// TODO Auto-generated method stub
 					Log.d(tag, "Item Long Pressed: "+position);
 					((RangerFLink)getActivity())
-						.disconnectBleDevice(MainListViewAdapter.connectDevices.get(position).getAddress());
+						.disconnectBleDevice(MainListViewAdapter.listDevices.get(position).getAddress());
 					Refresh();
 					return false;
 				}

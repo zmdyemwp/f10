@@ -3,5 +3,6 @@
     <color name="dark_blue">#0061a5</color>
     <color name="light_blue">#deebf7</color>
     <color name="yellow">#ffdb2b</color>
+    <color name="dark_red">#aa0000</color>
     
 </resources>

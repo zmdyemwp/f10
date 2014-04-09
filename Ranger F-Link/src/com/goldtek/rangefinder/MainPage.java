@@ -52,6 +52,10 @@ public class MainPage extends Fragment {
 					tran.replace(R.id.fragment1, ItemDetailPage.newInstance(arg2));
 					tran.addToBackStack(tag);
 					tran.commit();
+					//	TODO: switch to connected list page
+					/*FragmentManager fm = getActivity().getFragmentManager();
+					FragmentTransaction tran = fm.beginTransaction();
+					tran.replace(R.id.fragment1, new ListPage()).commit();*/
 				}
 			};
 

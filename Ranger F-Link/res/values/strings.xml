@@ -26,6 +26,7 @@
     
     <string name="scanning">Scan</string>
     <string name="stop_scanning">Stop</string>
+    <string name="stop_alarm">Stop Alarm</string>
     
 </resources>
 

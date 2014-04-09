@@ -35,6 +35,7 @@ public class ItemDetailPage extends Fragment {
 		((RangerFLink)activity).setCurrentFragment(this);
 	}
 	
+	ItemDetail iDev;
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
 		View v = null;
@@ -42,16 +43,28 @@ public class ItemDetailPage extends Fragment {
 			Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
-				ItemDetail iDev = RangerFLink.finders.get(getIndex());
-				this.isBuzzerOn = ((RangerFLink)getActivity())
-						.getBuzzerState(iDev.getMac());
+				iDev = RangerFLink.finders.get(getIndex());
 				v = inflater.inflate(R.layout.dev_item_detail, container, false);
-				v.findViewById(R.id.dev_find).setOnClickListener(setBuzzerPower);
+				//	Buzzer Button
+				View buzzerButton = v.findViewById(R.id.dev_find); 
+				buzzerButton.setOnClickListener(setBuzzerPower);
+				//	Device Image
 				ImageView iv = (ImageView)v.findViewById(R.id.dev_icon); 
 				iv.setImageBitmap(iDev.getThumbnail());
 				iv.setOnClickListener(editItem);
+				//	Device Name
 				((TextView)v.findViewById(R.id.dev_name))
 					.setText(RangerFLink.finders.get(getIndex()).getName());
+				//	Stop Button
+				View stopButton = v.findViewById(R.id.dev_stop_alarm);
+				stopButton.setOnClickListener(stopLossLinkAlarm);
+				if(((RangerFLink)getActivity()).checkDeviceLost(iDev.getMac())) {
+					stopButton.setVisibility(View.VISIBLE);
+					buzzerButton.setVisibility(View.GONE);
+				} else {
+					stopButton.setVisibility(View.GONE);
+					buzzerButton.setVisibility(View.VISIBLE);
+				}
 			} catch(Throwable e) {
 				//Log.d(tag, e.getLocalizedMessage());
 			}
@@ -71,21 +84,39 @@ public class ItemDetailPage extends Fragment {
 			ft.commit();
 		}
 	};
-	
-	
-	private boolean isBuzzerOn = false;
+
 	View.OnClickListener setBuzzerPower = new View.OnClickListener() {
 		
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
+			boolean isBuzzerOn = ((RangerFLink)getActivity())
+					.getBuzzerState(iDev.getMac());
 			if(isBuzzerOn) {
 				isBuzzerOn = false;
 			} else {
 				isBuzzerOn = true;
 			}
-			((RangerFLink)getActivity()) 
+			((RangerFLink)getActivity())
 				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), isBuzzerOn);
+		}
+	};
+	
+	View.OnClickListener stopLossLinkAlarm = new View.OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			((RangerFLink)getActivity())
+				.resetFinder(RangerFLink.finders.get(getIndex()).getMac());
+			
+			FragmentManager fm = getFragmentManager();
+			for(int i = 0; i < fm.getBackStackEntryCount();i++) {
+				fm.popBackStack();
+			}
+			FragmentTransaction ftran = fm.beginTransaction();
+			ftran.replace(R.id.fragment1, new ListPage());
+			ftran.commit();
 		}
 	};
 }

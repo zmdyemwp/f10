@@ -48,6 +48,9 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
+    
+    public final static String LOSS_LINK_ALARM =
+    		"com.goldtek.bluetooth.le.LOSS_LINK_ALARM";
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
@@ -71,6 +74,12 @@ public class BluetoothLeService extends Service {
                 mConnectionState = STATE_DISCONNECTED;
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
+                //	TODO: check if the device is belong to connect list
+                //			if not, this is a loss link!
+                if(checkGattExist(gatt.getDevice().getAddress())) {
+                	lostDev.add(gatt);
+                	broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice().getAddress());
+                }
             }
         }
 
@@ -101,6 +110,12 @@ public class BluetoothLeService extends Service {
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
+        sendBroadcast(intent);
+    }
+    
+    private void broadcastUpdate(final String action, final String address) {
+        final Intent intent = new Intent(action);
+        intent.putExtra("address", address);
         sendBroadcast(intent);
     }
 
@@ -145,6 +160,9 @@ public class BluetoothLeService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+    	
+    	h.post(rReconnectThread);
+    	
         return mBinder;
     }
 
@@ -153,8 +171,15 @@ public class BluetoothLeService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        close();
-        return super.onUnbind(intent);
+
+    	h.removeCallbacks(rReconnectThread);
+    	close();
+
+    	return super.onUnbind(intent);
+    }
+    
+    public int onStartCommand(Intent intent, int flags, int startId) {
+    	return 0;
     }
 
     private final IBinder mBinder = new LocalBinder();
@@ -194,6 +219,14 @@ public class BluetoothLeService extends Service {
      *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      *         callback.
      */
+    boolean checkGattExist(final String address) {
+    	for(BluetoothGatt conn:mBluetoothGatts) {
+        	if(address.equals(conn.getDevice().getAddress())) {
+        		return true;
+        	}
+        }
+    	return false;
+    }
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
@@ -247,8 +280,8 @@ public class BluetoothLeService extends Service {
     public void disconnect(final String address) {
         for(BluetoothGatt conn:mBluetoothGatts) {
         	if(address.equals(conn.getDevice().getAddress())) {
-        		conn.disconnect();
         		removeConn(conn);
+        		conn.disconnect();
         	}
         }
         //mBluetoothGatt.disconnect();
@@ -375,15 +408,20 @@ public class BluetoothLeService extends Service {
     public boolean getBuzzerState(final String address) {
     	BluetoothGatt conn = getConn(address);
     	if(null != conn) {
-	    	BluetoothGattService service = conn
-	    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
-	    	BluetoothGattCharacteristic cBuzzer = service
-	    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
-	    	conn.readCharacteristic(cBuzzer);
-	    	byte[] v = cBuzzer.getValue();
-	    	if(null != v && 0 < v[0]) {
-	    		Log.d("getBuzzerState()", String.format("0x%02x", v[0]));
-	    		return true;
+    		try {
+		    	BluetoothGattService service = conn
+		    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
+		    	BluetoothGattCharacteristic cBuzzer = service
+		    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
+		    	byte[] v = cBuzzer.getValue();
+		    	if(null != v && 0 < v[0]) {
+		    		Log.d("getBuzzerState()", String.format("0x%02x", v[0]));
+		    		return true;
+		    	}
+    		} catch(NullPointerException n) {
+    			Log.d("READ Characteristic", n.getLocalizedMessage());
+    		} catch(Throwable e) {
+    			Log.d("READ Characteristic", e.getLocalizedMessage());
 	    	}
     	}
     	return false;
@@ -392,13 +430,19 @@ public class BluetoothLeService extends Service {
     private void setFinder(final String address, boolean enable) {
     	BluetoothGatt conn = getConn(address);
     	if(null != conn) {
-	    	final byte[] bb = new byte[] {(byte)((enable)?0x02:0x00)};
-	    	BluetoothGattService service = conn
-	    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
-	    	BluetoothGattCharacteristic cFinder = service
-	    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
-	    	cFinder.setValue(bb);
-	    	conn.writeCharacteristic(cFinder);
+    		try {
+    			final byte[] bb = new byte[] {(byte)((enable)?0x02:0x00)};
+    	    	BluetoothGattService service = conn
+    	    			.getService(UUID.fromString(LINK_LOSS_SERVICE));
+    	    	BluetoothGattCharacteristic cFinder = service
+    	    			.getCharacteristic(UUID.fromString(LINK_LOSS_CHARACTERISTIC));
+    	    	cFinder.setValue(bb);
+    	    	conn.writeCharacteristic(cFinder);
+    		} catch(NullPointerException n) {
+    			Log.d("READ Characteristic", n.getLocalizedMessage());
+    		} catch(Throwable e) {
+    			Log.d("READ Characteristic", e.getLocalizedMessage());
+	    	}
     	}
     }
     
@@ -407,10 +451,18 @@ public class BluetoothLeService extends Service {
     }
     
     public void resetFinder(final String address) {
-    	setFinder(address, false);
+    	//setFinder(address, false);
+    	removeLostDev(address);
     	setFinder(address, true);
     }
     
+    void removeLostDev(final String address) {
+    	for(BluetoothGatt dev:lostDev) {
+    		if(dev.getDevice().getAddress().equals(address)) {
+    			lostDev.remove(dev);
+    		}
+    	}
+    }
     /**
      * Lost Link List
      * 		Keep all lost link
@@ -427,7 +479,11 @@ public class BluetoothLeService extends Service {
 			// TODO Auto-generated method stub
 			for(BluetoothGatt dev:lostDev) {
 				if( !checkDevConnected(dev.getDevice().getAddress()) ) {
-					dev.connect();
+					if(dev.connect()) {
+						Log.d("BluetoothLeService", "Reconnected BLE");
+					} else {
+						Log.d("BluetoothLeService", "BLE NOT FOUND");
+					}
 				}
 			}
 
@@ -444,5 +500,13 @@ public class BluetoothLeService extends Service {
     		}
     	}
     	return false;
+    }
+    
+    ArrayList<BluetoothDevice> getLostDevices() {
+    	ArrayList<BluetoothDevice> result = new ArrayList<BluetoothDevice>();
+    	for(BluetoothGatt dev:lostDev) {
+    		result.add(dev.getDevice());
+    	}
+    	return result;
     }
 }

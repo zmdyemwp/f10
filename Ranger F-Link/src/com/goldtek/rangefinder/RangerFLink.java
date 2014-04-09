@@ -10,9 +10,11 @@ import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -26,7 +28,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.Toast;
@@ -38,10 +39,29 @@ public class RangerFLink extends Activity {
 	BluetoothAdapter ba = null;
 	private static final int REQUEST_ENABLE_BT = 1;
 	/*************************************************************************/
+	BroadcastReceiver bc = new BroadcastReceiver() {
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			if(intent.getAction().equals(BluetoothLeService.LOSS_LINK_ALARM)) {
+				int index = getIndex(intent.getStringExtra("address")); 
+				if(0 <= index) {
+					FragmentManager fm = getFragmentManager();
+					FragmentTransaction tran = fm.beginTransaction();
+					tran.replace(R.id.fragment1, ItemDetailPage.newInstance(index));
+					tran.addToBackStack(null);
+					tran.commit();
+				}
+			}
+		}
+		
+	};
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
         devImage = getSharedPreferences(DEV_IMAGE, 0);
         devName = getSharedPreferences(DEV_NAME, 0);
         //	Bluetooth
@@ -130,15 +150,19 @@ public class RangerFLink extends Activity {
         } else {
         	Log.d(tag, "onResume()::Bluetooth is ready to use!");
         }
+
     	//	Scan BLE devices
     	scanLeDevice(true);
     	//	Connect to BLE service
     	this.bindBleService();
+    	//	Register Receiver
+    	registerReceiver(bc, new IntentFilter(BluetoothLeService.LOSS_LINK_ALARM));
     }
     
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(bc);
         this.unbindBleService();
         scanLeDevice(false);
         finders.clear();
@@ -258,6 +282,15 @@ public class RangerFLink extends Activity {
 		return false;
 	}
 
+	public static int getIndex(final String address) {
+		for(ItemDetail i:finders) {
+			if(i.getMac().equals(address)) {
+				return finders.indexOf(i);
+			}
+		}
+		return -1;
+	}
+	
 	public static int getTotal() {
 		return total;
 	}
@@ -384,6 +417,25 @@ public class RangerFLink extends Activity {
     	}
     }
 
+    public ArrayList<BluetoothDevice> getLostDevices() {
+    	if(null == mBluetoothLeService) {
+    		return null;
+    	} else {
+    		return mBluetoothLeService.getLostDevices();
+    	}
+    }
+    
+    public boolean checkDeviceLost(final String address) {
+    	ArrayList<BluetoothDevice> devs =
+    			getLostDevices();
+    	for(BluetoothDevice dev:devs) {
+    		if(dev.getAddress().equals(address)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     public void connectBleDevice(final String address) {
     	if(null != mBluetoothLeService) {
     		mBluetoothLeService.connect(address);
@@ -413,6 +465,12 @@ public class RangerFLink extends Activity {
     public void enableFinder(final String address) {
     	if(null != mBluetoothLeService) {
     		mBluetoothLeService.enableFinder(address);
+    	}
+    }
+    
+    public void resetFinder(final String address) {
+    	if(null != mBluetoothLeService) {
+    		mBluetoothLeService.resetFinder(address);
     	}
     }
 }

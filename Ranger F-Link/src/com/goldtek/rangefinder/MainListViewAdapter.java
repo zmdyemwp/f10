@@ -21,21 +21,42 @@ public class MainListViewAdapter extends MainAdapter {
 		super(cc);
 	}
 
-	public static ArrayList<BluetoothDevice> connectDevices;
+	private static ArrayList<BluetoothDevice> lostDevices;
+	private static ArrayList<BluetoothDevice> connectedDevices;
+	public static ArrayList<BluetoothDevice>
+					listDevices = new ArrayList<BluetoothDevice>();
+
+	boolean checkDeviceLost(final String address) {
+		for(BluetoothDevice dev:lostDevices) {
+			if(dev.getAddress().equals(address)) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	@Override
 	public int getCount() {
 		// TODO Auto-generated method stub
-		connectDevices = ((RangerFLink)c).getConnectionList();
-		if(null == connectDevices) {
+		lostDevices = ((RangerFLink)c).getLostDevices();
+		connectedDevices = ((RangerFLink)c).getConnectionList();
+		listDevices.clear();
+		/*if(null != lostDevices) {
+			listDevices.addAll(lostDevices);
+		}*/
+		if(null != connectedDevices) {
+			listDevices.addAll(connectedDevices);
+		}
+
+		if(null == listDevices) {
 			return 0;
 		}
-		for(BluetoothDevice dev:connectDevices) {
+		for(BluetoothDevice dev:listDevices) {
 			if( ! RangerFLink.checkFinderExist(dev)) {
-				connectDevices.remove(dev);
+				listDevices.remove(dev);
 			}
 		}
-		return connectDevices.size();
+		return listDevices.size();
 	}
 
 	ItemDetail getFinder(final String address) {
@@ -57,11 +78,14 @@ public class MainListViewAdapter extends MainAdapter {
 			v = inflater.inflate(R.layout.listview_dev_item, null);
 		}
 		try {
-			ItemDetail i = getFinder(connectDevices.get(position).getAddress());
+			if(this.checkDeviceLost(listDevices.get(position).getAddress())) {
+				v.setBackground(c.getResources().getDrawable(R.drawable.red_round_rect));
+			}
+			ItemDetail i = getFinder(listDevices.get(position).getAddress());
 			((ImageView)v.findViewById(R.id.imageView1)).setImageBitmap(i.getThumbnail());
 			((TextView)v.findViewById(R.id.textView1)).setText(i.getName());
 		} catch(Throwable e) {
-			Log.d("MainGridViewAdapter", ""+position+": "+e.getLocalizedMessage());
+			Log.d(tag, ""+position+": "+e.getLocalizedMessage());
 		}
 		return v;
 	}

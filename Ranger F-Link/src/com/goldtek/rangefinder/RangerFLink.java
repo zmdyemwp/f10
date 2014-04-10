@@ -438,6 +438,15 @@ public class RangerFLink extends Activity {
     	}
     }
 
+    public boolean checkDeviceConnected(final String address) {
+    	for(BluetoothDevice dev:getConnectionList()) {
+    		if(dev.getAddress().equals(address)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     public ArrayList<BluetoothDevice> getLostDevices() {
     	if(null == mBluetoothLeService) {
     		return null;

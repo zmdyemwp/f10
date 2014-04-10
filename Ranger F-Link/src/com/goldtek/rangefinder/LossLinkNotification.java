@@ -1,15 +1,20 @@
 package com.goldtek.rangefinder;
 
-import com.goldtek.rangefinder.RangerFLink.ItemDetail;
-
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Vibrator;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.goldtek.rangefinder.RangerFLink.ItemDetail;
 
 public class LossLinkNotification extends Fragment {
 	
@@ -27,17 +32,45 @@ public class LossLinkNotification extends Fragment {
 		return this.getArguments().getInt("index");
 	}
 	
+	MediaPlayer mp;
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		((RangerFLink)activity).setCurrentFragment(this);
-		// Start Alarm
+		// TODO: Start Alarm
+		mp = MediaPlayer.create(getActivity(), R.raw.beep);
+		mp.setLooping(true);
+		mp.start();
+		h.post(r);
 	}
 	
 	@Override
 	public void onDetach() {
 		super.onDetach();
-		//	Stop Alarm
+		//	TODO: Stop Alarm
+		h.removeCallbacks(r);
+		mp.stop();
+		mp.release();
 	}
+	
+	Handler h = new Handler();
+	Runnable r = new Runnable() {
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			try {
+				Vibrator vb = (Vibrator)getActivity()
+						.getSystemService(((Context)getActivity()).VIBRATOR_SERVICE);
+		    	vb.vibrate(300);
+			} catch(NullPointerException n) {
+				Log.d(tag, n.getLocalizedMessage());
+			} catch(Throwable e) {
+				Log.d(tag, e.getLocalizedMessage());
+			}
+	    	h.postDelayed(r, 500);
+		}
+		
+	};
 	
 	ItemDetail iDev;
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

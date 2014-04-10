@@ -58,12 +58,21 @@ public class ItemDetailPage extends Fragment {
 				//	Stop Button
 				View stopButton = v.findViewById(R.id.dev_stop_alarm);
 				stopButton.setOnClickListener(stopLossLinkAlarm);
+				//	Check Device Lost
 				if(((RangerFLink)getActivity()).checkDeviceLost(iDev.getMac())) {
 					stopButton.setVisibility(View.VISIBLE);
 					buzzerButton.setVisibility(View.GONE);
 				} else {
 					stopButton.setVisibility(View.GONE);
 					buzzerButton.setVisibility(View.VISIBLE);
+				}
+				//	Check Device Connected
+				if(((RangerFLink)getActivity()).checkDeviceConnected(iDev.getMac())) {
+					stopButton.setEnabled(true);
+					buzzerButton.setEnabled(true);
+				} else {
+					stopButton.setEnabled(false);
+					buzzerButton.setEnabled(false);
 				}
 			} catch(Throwable e) {
 				//Log.d(tag, e.getLocalizedMessage());

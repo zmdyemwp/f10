@@ -188,13 +188,13 @@ public class BluetoothLeService extends Service {
         // invoked when the UI is disconnected from the Service.
 
     	h.removeCallbacks(rReconnectThread);
-    	close();
+    	//close();
 
     	return super.onUnbind(intent);
     }
     
     public int onStartCommand(Intent intent, int flags, int startId) {
-    	return 0;
+    	return Service.START_STICKY;
     }
 
     private final IBinder mBinder = new LocalBinder();

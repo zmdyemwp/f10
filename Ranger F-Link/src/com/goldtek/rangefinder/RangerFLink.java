@@ -33,6 +33,7 @@ import android.widget.BaseAdapter;
 import android.widget.Toast;
 
 public class RangerFLink extends Activity {
+
 	static final String tag = "Ranger F-Link";
 	public static int image_width = 0;
 	Fragment currentFragment = null;
@@ -80,6 +81,10 @@ public class RangerFLink extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        Intent i = new Intent();
+		i.setClassName("com.goldtek.rangefinder", "com.goldtek.rangefinder.BluetoothLeService");
+		startService(i);
         
         devImage = getSharedPreferences(DEV_IMAGE, 0);
         devName = getSharedPreferences(DEV_NAME, 0);
@@ -157,8 +162,8 @@ public class RangerFLink extends Activity {
 
     @Override
     public void onBackPressed() {
-    	super.onBackPressed();
-    	//this.moveTaskToBack(true);
+    	//super.onBackPressed();
+    	this.moveTaskToBack(true);
     }
     
     @Override
@@ -186,7 +191,7 @@ public class RangerFLink extends Activity {
         unregisterReceiver(bc);
         this.unbindBleService();
         scanLeDevice(false);
-        finders.clear();
+        //finders.clear();
 	}
     
     @Override

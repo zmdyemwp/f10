@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 
 public class BottomButtons extends Fragment {
 	static private final String tag = "BottomButtons";
-	
+
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
 		Log.d(tag, "onCreateView");
@@ -21,7 +21,7 @@ public class BottomButtons extends Fragment {
 		result.findViewById(R.id.back_button).setOnClickListener(back);
 		return result;
 	}
-	
+
 	FragmentManager fmgrClear() {
 		FragmentManager fm = getFragmentManager();
 		for(int i = 0; i < fm.getBackStackEntryCount();i++) {
@@ -29,9 +29,8 @@ public class BottomButtons extends Fragment {
 		}
 		return fm;
 	}
-	
+
 	View.OnClickListener switch2Main = new View.OnClickListener() {
-		
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
@@ -46,9 +45,8 @@ public class BottomButtons extends Fragment {
 			}
 		}
 	};
-	
+
 	View.OnClickListener switch2List = new View.OnClickListener() {
-		
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
@@ -63,9 +61,8 @@ public class BottomButtons extends Fragment {
 			}
 		}
 	};
-	
+
 	View.OnClickListener back = new View.OnClickListener() {
-		
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub

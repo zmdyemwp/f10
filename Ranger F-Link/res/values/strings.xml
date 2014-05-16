@@ -13,7 +13,7 @@
         Copyright© 2014\n\
         Goldtek Technology Co.,Ltd.\n\
         All Rights Reserved\n\n\
-        v0.01</string>
+        v1.00</string>
 
     <string name="find_it">Find It</string>
     <string name="camera_roll">Camera Roll</string>
@@ -28,6 +28,8 @@
     <string name="stop_scanning">Stop</string>
     <string name="stop_alarm">Stop Alarm</string>
     <string name="reconnect_confirm">Confirm</string>
+    
+    <string name="connecting_title">Connecting</string>
     
 </resources>
 

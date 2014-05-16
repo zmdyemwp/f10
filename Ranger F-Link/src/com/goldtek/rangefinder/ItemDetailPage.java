@@ -99,15 +99,18 @@ public class ItemDetailPage extends Fragment {
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
+			/*
 			boolean isBuzzerOn = ((RangerFLink)getActivity())
 					.getBuzzerState(iDev.getMac());
 			if(isBuzzerOn) {
 				isBuzzerOn = false;
 			} else {
 				isBuzzerOn = true;
-			}
+			}*/
 			((RangerFLink)getActivity())
-				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), isBuzzerOn);
+				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), false);
+			((RangerFLink)getActivity())
+				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), true);
 		}
 	};
 	

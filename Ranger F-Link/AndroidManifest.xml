@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.goldtek.rangefinder"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.00" >
+    <!-- TODO: modify the copyright comment for version number -->
 
     <uses-sdk
         android:minSdkVersion="18"

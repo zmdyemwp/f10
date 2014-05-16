@@ -60,7 +60,6 @@ public class RangerFLink extends Activity {
 						tran.addToBackStack(null);
 						tran.commit();
 					}
-					Log.d("lossLink", "disconnection");
 				} else if(intent.getStringExtra("status")
 						.equals(BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION)) {
 					int index = getIndex(intent.getStringExtra("address")); 
@@ -71,7 +70,6 @@ public class RangerFLink extends Activity {
 						tran.addToBackStack(null);
 						tran.commit();
 					}
-					Log.d("lossLink","reconnection");
 				}
 			}
 		}
@@ -110,14 +108,12 @@ public class RangerFLink extends Activity {
         DisplayMetrics dm = new DisplayMetrics();
         this.getWindowManager().getDefaultDisplay().getMetrics(dm);
         image_width = dm.widthPixels/3;
-        Log.d(tag, "Metrics::widthPixels := "+dm.widthPixels);
         try {
         	//	TODO: Execute AsyncTask to build finder list
         	FragmentManager fragmentManager = getFragmentManager();
 	        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 	        fragmentTransaction.add(R.id.fragment1, new MainPage()).commit();
         } catch(Throwable e) {
-        	Log.d(tag, e.getLocalizedMessage());
         }
         
         scanLeDevice(true);
@@ -163,7 +159,12 @@ public class RangerFLink extends Activity {
     @Override
     public void onBackPressed() {
     	//super.onBackPressed();
-    	this.moveTaskToBack(true);
+    	FragmentManager fm = getFragmentManager();
+    	if(0 < fm.getBackStackEntryCount()) {
+    		fm.popBackStack();
+		} else {
+			this.moveTaskToBack(true);
+		}
     }
     
     @Override
@@ -172,9 +173,6 @@ public class RangerFLink extends Activity {
     	if (!ba.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            Log.d(tag, "onResume()::REQUEST_ENABLE_BT");
-        } else {
-        	Log.d(tag, "onResume()::Bluetooth is ready to use!");
         }
 
     	//	Scan BLE devices
@@ -219,6 +217,14 @@ public class RangerFLink extends Activity {
     private static final long SCAN_PERIOD = 10000;
     boolean mScanning = false;
     Handler h = new Handler();
+    Runnable r = new Runnable() {
+        @Override
+        public void run() {
+            mScanning = false;
+            ba.stopLeScan(mLeScanCallback);
+            invalidateOptionsMenu();
+        }
+    };
     public void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
@@ -231,21 +237,25 @@ public class RangerFLink extends Activity {
 	        		addItem(new ItemDetail(dev));
 	        	}
         	}
+        	
+        	try {
+        		((BaseAdapter)((AbsListView)currentFragment
+    				.getView()
+					.findViewById(R.id.the_view)).getAdapter())
+					.notifyDataSetChanged();
+        	} catch(NullPointerException n) {
+        	} catch(Throwable e) {
+        	}
+					
         	//	Add scanned devices
-            h.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mScanning = false;
-                    ba.stopLeScan(mLeScanCallback);
-                    invalidateOptionsMenu();
-                }
-            }, SCAN_PERIOD);
+            h.postDelayed(r, SCAN_PERIOD);
 
             mScanning = true;
             ba.startLeScan(mLeScanCallback);
         } else {
             mScanning = false;
             ba.stopLeScan(mLeScanCallback);
+            h.removeCallbacks(r);
         }
         invalidateOptionsMenu();
     }
@@ -444,7 +454,12 @@ public class RangerFLink extends Activity {
     }
 
     public boolean checkDeviceConnected(final String address) {
-    	for(BluetoothDevice dev:getConnectionList()) {
+    	ArrayList<BluetoothDevice> list = getConnectionList();
+    	if(null == list) {
+    		return false;
+    	}
+    		
+    	for(BluetoothDevice dev:list) {
     		if(dev.getAddress().equals(address)) {
     			return true;
     		}
@@ -473,7 +488,9 @@ public class RangerFLink extends Activity {
     
     public void connectBleDevice(final String address) {
     	if(null != mBluetoothLeService) {
-    		mBluetoothLeService.connect(address);
+    		if( ! mBluetoothLeService.checkDevConnected(address)) {
+    			mBluetoothLeService.connect(address);
+    		}
     	}
     }
 

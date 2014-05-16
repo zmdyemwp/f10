@@ -70,7 +70,8 @@ public class BottomButtons extends Fragment {
 			if(0 < fmgr.getBackStackEntryCount()) {
 				fmgr.popBackStack();
 			} else {
-				getActivity().finish();
+				//getActivity().finish();
+				getActivity().moveTaskToBack(true);
 			}
 		}
 	};

@@ -509,6 +509,10 @@ public class BluetoothLeService extends Service {
     
     boolean checkDevConnected(final String address) {
     	ArrayList<BluetoothDevice> devs = this.getConnectedDevices();
+    	if(null == devs) {
+    		return false;
+    	}
+
     	for(BluetoothDevice dev:devs) {
     		if(dev.getAddress().equals(address)) {
     			return true;

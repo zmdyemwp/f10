@@ -413,8 +413,16 @@ public class BluetoothLeService extends Service {
 	    	byte[] buf = new byte[] {(byte)((b)?0x02:0x00), 0x00};
 	    	BluetoothGattService service = conn
 	    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
+	    	if(null == service) {
+	    		return;
+	    	}
+
 	    	BluetoothGattCharacteristic cBuzzer = service
 	    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
+	    	if(null == cBuzzer) {
+	    		return;
+	    	}
+
 	    	cBuzzer.setValue(buf);
 	    	conn.writeCharacteristic(cBuzzer);
     	}
@@ -426,8 +434,16 @@ public class BluetoothLeService extends Service {
     		try {
 		    	BluetoothGattService service = conn
 		    			.getService(UUID.fromString(IMMEDIATE_ALERT_SERVICE));
+		    	if(null == service) {
+		    		return false;
+		    	}
+
 		    	BluetoothGattCharacteristic cBuzzer = service
 		    			.getCharacteristic(UUID.fromString(IMMEDIATE_ALERT_CHARACTERISTIC));
+		    	if(null == cBuzzer) {
+		    		return false;
+		    	}
+
 		    	byte[] v = cBuzzer.getValue();
 		    	if(null != v && 0 < v[0]) {
 		    		Log.d("getBuzzerState()", String.format("0x%02x", v[0]));
@@ -449,8 +465,16 @@ public class BluetoothLeService extends Service {
     			final byte[] bb = new byte[] {(byte)((enable)?0x02:0x00)};
     	    	BluetoothGattService service = conn
     	    			.getService(UUID.fromString(LINK_LOSS_SERVICE));
+    	    	if(null == service) {
+    	    		return;
+    	    	}
+    	    	
     	    	BluetoothGattCharacteristic cFinder = service
     	    			.getCharacteristic(UUID.fromString(LINK_LOSS_CHARACTERISTIC));
+    	    	if(null == cFinder) {
+    	    		return;
+    	    	}
+    	    	
     	    	cFinder.setValue(bb);
     	    	conn.writeCharacteristic(cFinder);
     		} catch(NullPointerException n) {

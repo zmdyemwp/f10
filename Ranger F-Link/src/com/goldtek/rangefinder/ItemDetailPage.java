@@ -109,6 +109,10 @@ public class ItemDetailPage extends Fragment {
 			}*/
 			((RangerFLink)getActivity())
 				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), false);
+			try {
+				Thread.sleep(100);
+			} catch(Throwable e) {
+			}
 			((RangerFLink)getActivity())
 				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), true);
 		}

@@ -19,7 +19,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 
 public class BluetoothLeService extends Service {
 
@@ -71,28 +70,58 @@ public class BluetoothLeService extends Service {
                 intentAction = ACTION_GATT_CONNECTED;
                 mConnectionState = STATE_CONNECTED;
                 broadcastUpdate(intentAction);
-                Log.i(TAG, "Connected to GATT server.");
+                //Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
-                Log.i(TAG, "Attempting to start service discovery:"+gatt.discoverServices());
+                //Log.i(TAG, "Attempting to start service discovery:"+gatt.discoverServices());
+				gatt.discoverServices();
                 //	TODO: check if the device is belong to loss-link list
                 //			if it does, this is a reconnection
-                if(checkDevLost(gatt.getDevice().getAddress())) {
-                	Log.d("BLE service", "yyyyyyyyyyyyyyyyyyyyyyyy");
-                	broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice().getAddress(), LOSS_LINK_ALARM_RECONNECTION);
-                } else {
-                	Log.d("BLE service", "xxxxxxxxxxxxxxxxxxxxxxxx");
+				final String mac = gatt.getDevice().getAddress();
+                if(checkDevLost(mac)) {
+                	Intent i = new Intent();
+                	i.setClassName("com.goldtek.rangefinder",
+                				"com.goldtek.rangefinder.RangerFLink");
+                	i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                	i.putExtra("page",
+                			BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION);
+                	i.putExtra("mac", mac);
+                	i.setAction(Intent.ACTION_MAIN);
+                	i.addCategory(Intent.CATEGORY_LAUNCHER);
+                	startActivity(i);
+                	try {
+                		Thread.sleep(500);
+                	} catch(Throwable e) {}
+                	broadcastUpdate(LOSS_LINK_ALARM,
+									gatt.getDevice().getAddress(),
+									LOSS_LINK_ALARM_RECONNECTION);
                 }
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED;
                 mConnectionState = STATE_DISCONNECTED;
-                Log.i(TAG, "Disconnected from GATT server.");
+                //Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
                 //	TODO: check if the device is belong to connect list
                 //			if not, this is a loss link!
-                if(checkGattExist(gatt.getDevice().getAddress())) {
+                final String mac = gatt.getDevice().getAddress();
+                if(checkGattExist(mac)) {
                 	lostDev.add(gatt);
-                	broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice().getAddress(), LOSS_LINK_ALARM_DISCONNECTION);
+                	Intent i = new Intent();
+                	i.setClassName("com.goldtek.rangefinder",
+            				"com.goldtek.rangefinder.RangerFLink");
+                	i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                	i.putExtra("page",
+                			BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
+                	i.putExtra("mac", mac);
+                	i.setAction(Intent.ACTION_MAIN);
+                	i.addCategory(Intent.CATEGORY_LAUNCHER);
+                	startActivity(i);
+                	try {
+                		Thread.sleep(500);
+                	} catch(Throwable e) {}
+                	broadcastUpdate(LOSS_LINK_ALARM,
+									gatt.getDevice().getAddress(),
+									LOSS_LINK_ALARM_DISCONNECTION);
                 }
             }
         }
@@ -102,7 +131,7 @@ public class BluetoothLeService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
             } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
+                //Log.w(TAG, "onServicesDiscovered received: " + status);
             }
         }
 
@@ -146,13 +175,13 @@ public class BluetoothLeService extends Service {
             int format = -1;
             if ((flag & 0x01) != 0) {
                 format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "Heart rate format UINT16.");
+                //Log.d(TAG, "Heart rate format UINT16.");
             } else {
                 format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "Heart rate format UINT8.");
+                //Log.d(TAG, "Heart rate format UINT8.");
             }
             final int heartRate = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
+            //Log.d(TAG, String.format("Received heart rate: %d", heartRate));
             intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
         } else {
             // For all other profiles, writes the data formatted in HEX.
@@ -175,10 +204,11 @@ public class BluetoothLeService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-    	
-    	h.post(rReconnectThread);
-    	
-        return mBinder;
+		if( !bStart ) {
+    		h.post(rReconnectThread);
+    		bStart = true;
+    	}
+    	return mBinder;
     }
 
     @Override
@@ -187,13 +217,18 @@ public class BluetoothLeService extends Service {
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
 
-    	h.removeCallbacks(rReconnectThread);
+    	//h.removeCallbacks(rReconnectThread);
     	//close();
 
     	return super.onUnbind(intent);
     }
     
+    static boolean bStart = false;
     public int onStartCommand(Intent intent, int flags, int startId) {
+    	if( !bStart ) {
+    		h.post(rReconnectThread);
+    		bStart = true;
+    	}
     	return Service.START_STICKY;
     }
 
@@ -210,14 +245,14 @@ public class BluetoothLeService extends Service {
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                //Log.e(TAG, "Unable to initialize BluetoothManager.");
                 return false;
             }
         }
 
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
+            //Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
 
@@ -244,14 +279,14 @@ public class BluetoothLeService extends Service {
     }
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
+            //Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
         // Previously connected device.  Try to reconnect.
         // mBluetoothGatt object will be removed from array list.
         /*if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
+            //Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.");
             if (mBluetoothGatt.connect()) {
                 mConnectionState = STATE_CONNECTING;
                 return true;
@@ -270,7 +305,7 @@ public class BluetoothLeService extends Service {
         }
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
         if (device == null) {
-            Log.w(TAG, "Device not found.  Unable to connect.");
+            //Log.w(TAG, "Device not found.  Unable to connect.");
             return false;
         }
         BluetoothGatt gattConn = device.connectGatt(this, false, mGattCallback); 
@@ -336,7 +371,7 @@ public class BluetoothLeService extends Service {
     public void readCharacteristic(final String address, BluetoothGattCharacteristic characteristic) {
     	BluetoothGatt conn = getConn(address);
         if (mBluetoothAdapter == null || conn == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         conn.readCharacteristic(characteristic);
@@ -352,7 +387,7 @@ public class BluetoothLeService extends Service {
     				BluetoothGattCharacteristic characteristic, boolean enabled) {
     	BluetoothGatt conn = getConn(address);
         if (mBluetoothAdapter == null || conn == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
+            //Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         conn.setCharacteristicNotification(characteristic, enabled);
@@ -446,13 +481,13 @@ public class BluetoothLeService extends Service {
 
 		    	byte[] v = cBuzzer.getValue();
 		    	if(null != v && 0 < v[0]) {
-		    		Log.d("getBuzzerState()", String.format("0x%02x", v[0]));
+		    		//Log.d("getBuzzerState()", String.format("0x%02x", v[0]));
 		    		return true;
 		    	}
     		} catch(NullPointerException n) {
-    			Log.d("READ Characteristic", n.getLocalizedMessage());
+    			//Log.d("READ Characteristic", n.getLocalizedMessage());
     		} catch(Throwable e) {
-    			Log.d("READ Characteristic", e.getLocalizedMessage());
+    			//Log.d("READ Characteristic", e.getLocalizedMessage());
 	    	}
     	}
     	return false;
@@ -478,9 +513,9 @@ public class BluetoothLeService extends Service {
     	    	cFinder.setValue(bb);
     	    	conn.writeCharacteristic(cFinder);
     		} catch(NullPointerException n) {
-    			Log.d("READ Characteristic", n.getLocalizedMessage());
+    			//Log.d("READ Characteristic", n.getLocalizedMessage());
     		} catch(Throwable e) {
-    			Log.d("READ Characteristic", e.getLocalizedMessage());
+    			//Log.d("READ Characteristic", e.getLocalizedMessage());
 	    	}
     	}
     }
@@ -519,14 +554,14 @@ public class BluetoothLeService extends Service {
 			for(BluetoothGatt dev:lostDev) {
 				if( !checkDevConnected(dev.getDevice().getAddress()) ) {
 					if(dev.connect()) {
-						Log.d("BluetoothLeService", "Reconnected BLE");
+						//Log.d("BluetoothLeService", "Reconnected BLE");
 					} else {
-						Log.d("BluetoothLeService", "BLE NOT FOUND");
+						//Log.d("BluetoothLeService", "BLE NOT FOUND");
 					}
 				}
 			}
-
-			h.postDelayed(rReconnectThread, 5000);
+			//Log.d("BluetoothLeService", "rReconnectThread");
+			h.postDelayed(rReconnectThread, 2000);
 		}
     	
     };

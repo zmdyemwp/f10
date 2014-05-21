@@ -2,12 +2,13 @@ package com.goldtek.rangefinder;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,9 +64,9 @@ public class LossLinkNotification extends Fragment {
 						.getSystemService(((Context)getActivity()).VIBRATOR_SERVICE);
 		    	vb.vibrate(300);
 			} catch(NullPointerException n) {
-				Log.d(tag, n.getLocalizedMessage());
+				//Log.d(tag, n.getLocalizedMessage());
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
 	    	h.postDelayed(r, 500);
 		}
@@ -94,8 +95,19 @@ public class LossLinkNotification extends Fragment {
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
-			getActivity().getFragmentManager().popBackStack();
+			FragmentManager fmgr = fmgrClear();
+			FragmentTransaction ftran = fmgr.beginTransaction();
+			ftran.replace(R.id.fragment1, new MainPage());
+			ftran.commit();
 		}
 	};
+
+	FragmentManager fmgrClear() {
+		FragmentManager fm = getFragmentManager();
+		for(int i = 0; i < fm.getBackStackEntryCount();i++) {
+			fm.popBackStack();
+		}
+		return fm;
+	}
 	
 }

@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,7 +39,7 @@ public class ItemDetailPage extends Fragment {
 		// Inflate the layout for this fragment
 		View v = null;
 		if(getIndex() < 0) {
-			Log.d(tag, "index: "+getIndex());
+			//Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
 				iDev = RangerFLink.finders.get(getIndex());

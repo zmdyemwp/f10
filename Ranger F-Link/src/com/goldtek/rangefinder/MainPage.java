@@ -7,7 +7,6 @@ import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,7 +48,7 @@ public class MainPage extends Fragment {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
-					Log.d(tag, String.format("onItemClick(%d)", arg2));
+					//Log.d(tag, String.format("onItemClick(%d)", arg2));
 					// TODO: switch to device detail page
 					currentSelectedIndex = arg2;
 					currentSelected = RangerFLink.finders.get(arg2).getMac();

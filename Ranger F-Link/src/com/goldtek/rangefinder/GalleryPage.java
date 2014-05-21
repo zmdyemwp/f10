@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,7 +47,7 @@ public class GalleryPage extends Fragment {
 			ga = new GalleryAdapter(c);
 			gv.setAdapter(ga);
 		} catch(Throwable e) {
-			Log.d(tag, e.getLocalizedMessage());
+			//Log.d(tag, e.getLocalizedMessage());
 		}
 		return v;
 	}

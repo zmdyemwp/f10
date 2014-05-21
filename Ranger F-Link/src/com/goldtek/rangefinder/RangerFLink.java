@@ -25,7 +25,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AbsListView;
@@ -44,7 +43,6 @@ public class RangerFLink extends Activity {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			// TODO Auto-generated method stub
 			if(intent.getAction().equals(BluetoothLeService.LOSS_LINK_ALARM)) {
 				if(intent.getStringExtra("status")
 						.equals(BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION)) {
@@ -75,6 +73,14 @@ public class RangerFLink extends Activity {
 		}
 		
 	};
+	
+	FragmentManager fmgrClear() {
+		FragmentManager fm = getFragmentManager();
+		for(int i = 0; i < fm.getBackStackEntryCount();i++) {
+			fm.popBackStack();
+		}
+		return fm;
+	}
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,15 +114,36 @@ public class RangerFLink extends Activity {
         DisplayMetrics dm = new DisplayMetrics();
         this.getWindowManager().getDefaultDisplay().getMetrics(dm);
         image_width = dm.widthPixels/3;
+
         try {
-        	//	TODO: Execute AsyncTask to build finder list
-        	FragmentManager fragmentManager = getFragmentManager();
+        	//	Execute AsyncTask to build finder list
+	        FragmentManager fragmentManager = fmgrClear();
 	        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-	        fragmentTransaction.add(R.id.fragment1, new MainPage()).commit();
+
+	        Intent intent = this.getIntent();
+	        String page = intent.getStringExtra("page");
+	        String mac = intent.getStringExtra("mac");
+
+	        //	TODO:
+	        if(null != page &&
+	        		page.contains(BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION)) {
+	        	//Log.d(tag, BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
+	        	fragmentTransaction.replace(R.id.fragment1,
+	        			LossLinkNotification.newInstance(getIndex(mac)));
+	        	fragmentTransaction.addToBackStack(null).commit();
+	        } else if(null != page &&
+	        		page.contains(BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION)) {
+	        	//Log.d(tag, BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION);
+	        	fragmentTransaction.replace(R.id.fragment1,
+	        			LossLinkReconnection.newInstance(getIndex(mac)));
+	        	fragmentTransaction.addToBackStack(null).commit();
+	        } else {
+	        	fragmentTransaction.add(R.id.fragment1, new MainPage());
+		        fragmentTransaction.commit();
+		        scanLeDevice(true);
+		    }
         } catch(Throwable e) {
         }
-        
-        scanLeDevice(true);
     }
 
 
@@ -126,7 +153,7 @@ public class RangerFLink extends Activity {
         getMenuInflater().inflate(R.menu.main, menu);
         
         if( !MainPage.class.equals(currentFragment.getClass())) {
-        	Log.d(tag, "CURRENT FRAGMENT: "+currentFragment.getClass());
+        	//Log.d(tag, "CURRENT FRAGMENT: "+currentFragment.getClass());
         	menu.findItem(R.id.action_scanning).setVisible(false);
         	menu.findItem(R.id.action_stop_scanning).setVisible(false);
         } else if(mScanning) {
@@ -136,9 +163,6 @@ public class RangerFLink extends Activity {
         	menu.findItem(R.id.action_scanning).setVisible(true);
         	menu.findItem(R.id.action_stop_scanning).setVisible(false);
         }
-    	/*AlertDialog.Builder ab = new AlertDialog.Builder(this);
-        ab.setMessage("TEst");
-        ab.create().show();*/
         return true;
     }
     
@@ -175,12 +199,11 @@ public class RangerFLink extends Activity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-    	//	Scan BLE devices
-    	//scanLeDevice(true);
     	//	Connect to BLE service
     	this.bindBleService();
     	//	Register Receiver
     	registerReceiver(bc, new IntentFilter(BluetoothLeService.LOSS_LINK_ALARM));
+
     }
     
     @Override
@@ -191,7 +214,7 @@ public class RangerFLink extends Activity {
         scanLeDevice(false);
         //finders.clear();
 	}
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // User chose not to enable Bluetooth.
@@ -246,7 +269,15 @@ public class RangerFLink extends Activity {
         	} catch(NullPointerException n) {
         	} catch(Throwable e) {
         	}
-					
+
+        	//	TODO: Add loss-link devices
+        	/*ArrayList<BluetoothDevice> lostdevs = getLostDevices();
+        	if(null != lostdevs) {
+        		for(BluetoothDevice dev:lostdevs) {
+        			addItem(new ItemDetail(dev));
+        		}
+        	}*/
+
         	//	Add scanned devices
             h.postDelayed(r, SCAN_PERIOD);
 
@@ -280,7 +311,7 @@ public class RangerFLink extends Activity {
 	        						.notifyDataSetChanged();
                 		} catch(Throwable e) {
                 			if(null != e.getLocalizedMessage()) {
-                				Log.d(tag, e.getLocalizedMessage());
+                				//Log.d(tag, e.getLocalizedMessage());
                 			}
                 		}
         			}
@@ -312,19 +343,23 @@ public class RangerFLink extends Activity {
 			if(i.getMac().equalsIgnoreCase(dev.getAddress())) {
 				return true;
 			} else {
-				Log.d(tag, String.format("%s :: %s", i.getMac(), dev.getAddress()));
+				//Log.d(tag, String.format("%s :: %s", i.getMac(), dev.getAddress()));
 			}
 		}
 		return false;
 	}
 
-	public static int getIndex(final String address) {
+	public int getIndex(final String address) {
 		for(ItemDetail i:finders) {
 			if(i.getMac().equals(address)) {
 				return finders.indexOf(i);
 			}
 		}
-		return -1;
+		//	TODO: if NO Device found...
+		ItemDetail temp = new ItemDetail(address); 
+		finders.add(temp);
+		return finders.indexOf(temp);
+		//return -1;
 	}
 	
 	public static int getTotal() {
@@ -342,7 +377,6 @@ public class RangerFLink extends Activity {
 	}
 
 	public class ItemDetail {
-		private static final String tag = "ItemDetail";
 		BluetoothDevice device;
 		String image = null;
 		String name = null;
@@ -353,6 +387,14 @@ public class RangerFLink extends Activity {
 			name = devName.getString(device.getAddress(),
 					getResources().getString(R.string.default_dev_name));
 			//	Check image settings
+			createThumbnail();
+		}
+		
+		public ItemDetail(final String mac) {
+			device = null;
+			image = devImage.getString(mac, defaultImgUri);
+			name = devName.getString(mac,
+					getResources().getString(R.string.default_dev_name));
 			createThumbnail();
 		}
 		
@@ -368,9 +410,9 @@ public class RangerFLink extends Activity {
 								.getBitmap(	getContentResolver(),
 											Uri.parse(image)),
 											image_width,image_width,false);
-				Log.d(tag, "createThumbnail()::"+image);
+				//Log.d(tag, "createThumbnail()::"+image);
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 				try {
 					image = defaultImgUri;
 					thumbnail = Bitmap.createScaledBitmap(
@@ -379,7 +421,7 @@ public class RangerFLink extends Activity {
 										Uri.parse(image)),
 										image_width,image_width,false);
 				} catch(Throwable ee) {
-					Log.d(tag, ee.getLocalizedMessage());
+					//Log.d(tag, ee.getLocalizedMessage());
 				}
 			}
 		}
@@ -399,7 +441,7 @@ public class RangerFLink extends Activity {
 		}
 		
 		public void SetName(String s) {
-			//	TODO: set device friendly name
+			//	set device friendly name
 			name = s;
 			SharedPreferences.Editor se = devName.edit();
 			se.putString(device.getAddress(), name).commit();
@@ -428,7 +470,7 @@ public class RangerFLink extends Activity {
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
             if (!mBluetoothLeService.initialize()) {
-                Log.e(tag, "Unable to initialize Bluetooth");
+                //Log.e(tag, "Unable to initialize Bluetooth");
                 finish();
             }
         }
@@ -458,7 +500,6 @@ public class RangerFLink extends Activity {
     	if(null == list) {
     		return false;
     	}
-    		
     	for(BluetoothDevice dev:list) {
     		if(dev.getAddress().equals(address)) {
     			return true;

@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,7 +50,7 @@ public class ListPage extends Fragment {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
-					Log.d("ListPage", String.format("onItemClick(%d)", arg2));
+					//Log.d("ListPage", String.format("onItemClick(%d)", arg2));
 					// TODO Auto-generated method stub
 					FragmentManager fm = getActivity().getFragmentManager();
 					FragmentTransaction tran = fm.beginTransaction();
@@ -67,7 +66,7 @@ public class ListPage extends Fragment {
 				public boolean onItemLongClick(AdapterView<?> parent, View view,
 						int position, long id) {
 					// TODO Auto-generated method stub
-					Log.d(tag, "Item Long Pressed: "+position);
+					//Log.d(tag, "Item Long Pressed: "+position);
 					((RangerFLink)getActivity())
 						.disconnectBleDevice(MainListViewAdapter.listDevices.get(position).getAddress());
 					Refresh();

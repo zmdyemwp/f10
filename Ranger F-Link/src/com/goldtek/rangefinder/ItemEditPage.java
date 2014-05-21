@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +36,7 @@ public class ItemEditPage extends Fragment {
 		// Inflate the layout for this fragment
 		View v = null;
 		if(getIndex() < 0) {
-			Log.d(tag, "index: "+getIndex());
+			//Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
 				v = inflater.inflate(R.layout.dev_item_edit, container, false);
@@ -50,7 +49,7 @@ public class ItemEditPage extends Fragment {
 				tv = (TextView)v.findViewById(R.id.dev_name);
 				v.findViewById(R.id.commit).setOnClickListener(applyChange);
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
 		}
 		return v;
@@ -90,7 +89,7 @@ public class ItemEditPage extends Fragment {
 			try {
 				RangerFLink.finders.get(getIndex()).SetName(tv.getText().toString());
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 				RangerFLink.finders.get(getIndex()).SetName("");
 			}
 			FragmentManager fm = getFragmentManager();

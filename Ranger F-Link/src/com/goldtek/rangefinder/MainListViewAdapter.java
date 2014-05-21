@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,7 +84,7 @@ public class MainListViewAdapter extends MainAdapter {
 			((ImageView)v.findViewById(R.id.imageView1)).setImageBitmap(i.getThumbnail());
 			((TextView)v.findViewById(R.id.textView1)).setText(i.getName());
 		} catch(Throwable e) {
-			Log.d(tag, ""+position+": "+e.getLocalizedMessage());
+			//Log.d(tag, ""+position+": "+e.getLocalizedMessage());
 		}
 		return v;
 	}

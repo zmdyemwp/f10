@@ -6,7 +6,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -53,7 +52,7 @@ public class GalleryAdapter extends BaseAdapter {
 										RangerFLink.image_width,
 										RangerFLink.image_width,false);
 		} catch(Throwable e) {
-			Log.d(tag, e.getLocalizedMessage());
+			//Log.d(tag, e.getLocalizedMessage());
 		}
 		return bitmap;
 	}

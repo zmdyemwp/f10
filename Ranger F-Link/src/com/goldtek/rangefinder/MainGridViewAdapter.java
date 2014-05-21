@@ -1,7 +1,6 @@
 package com.goldtek.rangefinder;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +28,7 @@ public class MainGridViewAdapter extends MainAdapter {
 			((TextView)v.findViewById(R.id.textView1))
 				.setText(RangerFLink.finders.get(position).getName());
 		} catch(Throwable e) {
-			Log.d("MainGridViewAdapter", ""+position+": "+e.getLocalizedMessage());
+			//Log.d("MainGridViewAdapter", ""+position+": "+e.getLocalizedMessage());
 		}
 		return v;
 	}

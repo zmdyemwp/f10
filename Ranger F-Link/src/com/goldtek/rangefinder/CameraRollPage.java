@@ -1,20 +1,19 @@
 package com.goldtek.rangefinder;
 
-import com.goldtek.rangefinder.RangerFLink.ItemDetail;
-
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+
+import com.goldtek.rangefinder.RangerFLink.ItemDetail;
 
 public class CameraRollPage extends Fragment {
 	public static final String tag = "CameraRollPage";
@@ -48,7 +47,7 @@ public class CameraRollPage extends Fragment {
 			ca = new CameraRollAdapter(c);
 			gv.setAdapter(ca);
 		} catch(Throwable e) {
-			Log.d(tag, e.getLocalizedMessage());
+			//Log.d(tag, e.getLocalizedMessage());
 		}
 		return v;
 	}
@@ -65,7 +64,7 @@ public class CameraRollPage extends Fragment {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
-					Log.d(tag, String.format("onItemClick(%d)", arg2));
+					//Log.d(tag, String.format("onItemClick(%d)", arg2));
 					
 					ca.StopLoading();
 					if(getIndex() >= 0) {

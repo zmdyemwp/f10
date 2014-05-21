@@ -11,9 +11,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
-//import android.util.ArrayMap;
 import android.support.v4.util.ArrayMap;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -79,7 +77,7 @@ public class CameraRollAdapter extends BaseAdapter {
 		try {
 			i.setImageBitmap(photomap.get(photokeys.get(position).toString()));
 		} catch(Throwable e) {
-			Log.d(tag, e.getLocalizedMessage());
+			//Log.d(tag, e.getLocalizedMessage());
 		}
 		
 		return i;
@@ -89,7 +87,7 @@ public class CameraRollAdapter extends BaseAdapter {
 		try {
 			iLoader.cancel(true);
 		} catch(Throwable e) {
-			Log.d(tag, e.getLocalizedMessage());
+			//Log.d(tag, e.getLocalizedMessage());
 		}
 	}
 	
@@ -105,22 +103,22 @@ public class CameraRollAdapter extends BaseAdapter {
 			try {
 				ExifInterface exif = new ExifInterface(f.toString());
 				if(exif.hasThumbnail()) {
-					Log.d(tag, "Thumbnail INSIDE the jpeg");
+					//Log.d(tag, "Thumbnail INSIDE the jpeg");
 					byte[] thumbnail = exif.getThumbnail();
 					if(null == thumbnail) {
-						Log.d(tag, "CreateThumbnail()::ExifInterface.getThumbnail() return NULL");
+						//Log.d(tag, "CreateThumbnail()::ExifInterface.getThumbnail() return NULL");
 						return null;
 					}
 					return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(thumbnail, 0, thumbnail.length)
 													, imgSize, imgSize, true);
 				}
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
-			Log.d(tag, "CreateThumbnail()::"+f.toString());
+			//Log.d(tag, "CreateThumbnail()::"+f.toString());
 			Bitmap bitmap = BitmapFactory.decodeFile(f.toString());
 			if(null == bitmap) {
-				Log.d(tag, "CreateThumbnail()::BitmapFactory() return NULL");
+				//Log.d(tag, "CreateThumbnail()::BitmapFactory() return NULL");
 				return null;
 			}
 			return Bitmap.createScaledBitmap(bitmap, imgSize, imgSize, true);
@@ -134,15 +132,15 @@ public class CameraRollAdapter extends BaseAdapter {
 				// TODO Auto-generated method stub
 				if( !dir.toString().contains("/.")) {
 					if(dir.isDirectory()) {
-						Log.d(tag, "subdirectory: "+filename);
+						//Log.d(tag, "subdirectory: "+filename);
 						return true; 
 					}
 					for(String ext:Image_Formats) {
 						if(filename.contains(ext)) {
-							Log.d(tag, String.format("\"%s\" do contain \"%s\"", filename, ext));
+							//Log.d(tag, String.format("\"%s\" do contain \"%s\"", filename, ext));
 							return true;
 						} else {
-							Log.d(tag, String.format("\"%s\" do NOT contain \"%s\"", filename, ext));
+							//Log.d(tag, String.format("\"%s\" do NOT contain \"%s\"", filename, ext));
 						}
 					}
 				}
@@ -165,7 +163,7 @@ public class CameraRollAdapter extends BaseAdapter {
 					photokeys.clear();
 					if(bDefPath) {
 						dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-						Log.d(tag, "RetrieveImageFiles: "+dir.toString());
+						//Log.d(tag, "RetrieveImageFiles: "+dir.toString());
 					} else {
 						//	Test directory
 						dir = new File("/storage/emulated/0/CozyCamera");
@@ -180,18 +178,18 @@ public class CameraRollAdapter extends BaseAdapter {
 							break;
 						}
 						if(f.isDirectory()) {
-							Log.d(tag, "RetrieveImageFiles()::Subdirectory::"+f.toString());
+							//Log.d(tag, "RetrieveImageFiles()::Subdirectory::"+f.toString());
 							RetrieveImageFiles(f.toString());
 						} else {
-							Log.d(tag, "RetrieveImageFiles()::Image File::"+f.toString());
+							//Log.d(tag, "RetrieveImageFiles()::Image File::"+f.toString());
 							photokeys.add(0,f);
 						}
 					}
 				} else {
-					Log.d(tag, "RetrieveImageFiles()::photolist is NULL");
+					//Log.d(tag, "RetrieveImageFiles()::photolist is NULL");
 				}
 			} catch (Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
 		}
 
@@ -208,7 +206,7 @@ public class CameraRollAdapter extends BaseAdapter {
 					if(null != t) {
 						photomap.put(f.toString(), t);
 						imgCount++;
-						Log.d(tag, "UpdateImageMap");
+						//Log.d(tag, "UpdateImageMap");
 						this.publishProgress();
 					}
 				}
@@ -220,20 +218,20 @@ public class CameraRollAdapter extends BaseAdapter {
 						break;
 					}
 					if(null == photomap.get(f.toString())) {
-						Log.d(tag, "Add NEW: "+f.toString());
+						//Log.d(tag, "Add NEW: "+f.toString());
 						photomap.put(f.toString(), CreateThumbnail(f));
 						imgCount++;
 						bchanged = true;
 					}
 				}
-				Log.d(tag, String.format("%d/%d", photokeys.size(), photomap.entrySet().size()));
+				//Log.d(tag, String.format("%d/%d", photokeys.size(), photomap.entrySet().size()));
 				for(String s:photomap.keySet()) {
 					if(this.isCancelled()) {
 						break;
 					}
-					Log.d(tag, s);
+					//Log.d(tag, s);
 					if(-1 == photokeys.indexOf(new File(s))) {
-						Log.d(tag, "Remove OLD: "+s);
+						//Log.d(tag, "Remove OLD: "+s);
 						//photomap.remove(obj.getKey());
 						bchanged = true;
 					}
@@ -245,14 +243,14 @@ public class CameraRollAdapter extends BaseAdapter {
 		}
 
 		private int RefreshFiles() {
-			Log.d(tag, "RefreshFiles()");
+			//Log.d(tag, "RefreshFiles()");
 			try {
 				//	TODO: get file name list
 				RetrieveImageFiles();
 				//	TODO: create/modify image map
 				UpdateImageMap();
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
 
 			return photokeys.size();
@@ -264,7 +262,7 @@ public class CameraRollAdapter extends BaseAdapter {
 			try {
 				RefreshFiles();
 			} catch(Throwable e) {
-				Log.d(tag, e.getLocalizedMessage());
+				//Log.d(tag, e.getLocalizedMessage());
 			}
 			return null;
 		}
@@ -272,7 +270,7 @@ public class CameraRollAdapter extends BaseAdapter {
 		@Override
 		protected void onProgressUpdate(Void... args) {
 			super.onProgressUpdate((Void)null);
-			Log.d(tag, "Notify that the DATA SET is changed!");
+			//Log.d(tag, "Notify that the DATA SET is changed!");
 			notifyDataSetChanged();
 		}
 

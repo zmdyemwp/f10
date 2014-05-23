@@ -61,7 +61,7 @@ public class LossLinkNotification extends Fragment {
 			// TODO Auto-generated method stub
 			try {
 				Vibrator vb = (Vibrator)getActivity()
-						.getSystemService(((Context)getActivity()).VIBRATOR_SERVICE);
+						.getSystemService(Context.VIBRATOR_SERVICE);
 		    	vb.vibrate(300);
 			} catch(NullPointerException n) {
 				//Log.d(tag, n.getLocalizedMessage());

@@ -25,6 +25,7 @@ public class MainPage extends Fragment {
 		super.onAttach(activity);
 		home = (RangerFLink)activity;
 		home.setCurrentFragment(this);
+		home.invalidateOptionsMenu();
 	}
 	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

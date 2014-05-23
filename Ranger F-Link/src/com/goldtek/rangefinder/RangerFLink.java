@@ -71,7 +71,7 @@ public class RangerFLink extends Activity {
 				}
 			}
 		}
-		
+
 	};
 	
 	FragmentManager fmgrClear() {

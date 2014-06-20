@@ -18,16 +18,16 @@ public class GalleryPage extends Fragment {
 
 	private static final String tag = "GalleryPage";
 	
-	public static GalleryPage newInstance(int i) {
+	public static GalleryPage newInstance(String i) {
 		GalleryPage f = new GalleryPage();
 		Bundle b = new Bundle();
-		b.putInt("index", i);
+		b.putString("address", i);
 		f.setArguments(b);
 		return f;
 	}
 	
-	int getIndex() {
-		return this.getArguments().getInt("index");
+	String getAddress() {
+		return this.getArguments().getString("address");
 	}
 	
 	public void onAttach(Activity activity) {
@@ -59,10 +59,10 @@ public class GalleryPage extends Fragment {
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
 					// TODO Auto-generated method stub
-					if(getIndex() >= 0) {
-						ItemDetail i = RangerFLink.finders.get(getIndex());
-						i.SetThumbnail(ga.createBitmap(arg2));
-						i.SetImage(ga.getUriString(arg2));
+					if(getAddress() != null) {
+						ItemDetail iDev = ((RangerFLink)getActivity()).getItem(getAddress());
+						iDev.SetThumbnail(ga.createBitmap(arg2));
+						iDev.SetImage(ga.getUriString(arg2));
 					}
 					FragmentManager fm = getActivity().getFragmentManager();
 					fm.popBackStack();

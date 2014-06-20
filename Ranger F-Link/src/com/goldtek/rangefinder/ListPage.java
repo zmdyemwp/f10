@@ -54,7 +54,8 @@ public class ListPage extends Fragment {
 					// TODO Auto-generated method stub
 					FragmentManager fm = getActivity().getFragmentManager();
 					FragmentTransaction tran = fm.beginTransaction();
-					tran.replace(R.id.fragment1, ItemDetailPage.newInstance(arg2));
+					String address = MainListViewAdapter.listDevices.get(arg2).getAddress();
+					tran.replace(R.id.fragment1, ItemDetailPage.newInstance(address));
 					tran.addToBackStack(null);
 					tran.commit();
 				}

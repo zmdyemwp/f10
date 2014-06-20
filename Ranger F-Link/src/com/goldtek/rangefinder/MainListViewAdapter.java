@@ -50,14 +50,18 @@ public class MainListViewAdapter extends MainAdapter {
 		if(null == listDevices) {
 			return 0;
 		}
-		for(BluetoothDevice dev:listDevices) {
+
+		/*	iteration v.s. modification
+		 * 		java.util.concurrentmodificationexception
+		 * for(BluetoothDevice dev:listDevices) {
 			if( ! RangerFLink.checkFinderExist(dev)) {
 				listDevices.remove(dev);
 			}
-		}
+		}*/
+
 		return listDevices.size();
 	}
-
+	
 	ItemDetail getFinder(final String address) {
 		for(ItemDetail i:RangerFLink.finders) {
 			if(i.getMac().equals(address)) {
@@ -77,7 +81,9 @@ public class MainListViewAdapter extends MainAdapter {
 			v = inflater.inflate(R.layout.listview_dev_item, null);
 		}
 		try {
-			if(this.checkDeviceLost(listDevices.get(position).getAddress())) {
+			String address = listDevices.get(position).getAddress();
+			//Log.d(tag, String.format("[%d]%s", position, address));
+			if(this.checkDeviceLost(address)) {
 				v.setBackground(c.getResources().getDrawable(R.drawable.red_round_rect));
 			}
 			ItemDetail i = getFinder(listDevices.get(position).getAddress());

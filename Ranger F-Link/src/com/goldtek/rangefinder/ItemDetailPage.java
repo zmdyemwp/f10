@@ -17,16 +17,16 @@ public class ItemDetailPage extends Fragment {
 	
 	private static final String tag = "ItemDetailPage";
 	
-	public static ItemDetailPage newInstance(int i) {
+	public static ItemDetailPage newInstance(String address) {
 		ItemDetailPage f = new ItemDetailPage();
 		Bundle b = new Bundle();
-		b.putInt("index", i);
+		b.putString("address", address);
 		f.setArguments(b);
 		return f;
 	}
 	
-	private int getIndex() {
-		return this.getArguments().getInt("index");
+	private String getAddress() {
+		return this.getArguments().getString("address");
 	}
 	
 	public void onAttach(Activity activity) {
@@ -38,11 +38,11 @@ public class ItemDetailPage extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
 		View v = null;
-		if(getIndex() < 0) {
+		if(getAddress() == null) {
 			//Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
-				iDev = RangerFLink.finders.get(getIndex());
+				iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 				v = inflater.inflate(R.layout.dev_item_detail, container, false);
 				//	Buzzer Button
 				View buzzerButton = v.findViewById(R.id.dev_find); 
@@ -53,7 +53,7 @@ public class ItemDetailPage extends Fragment {
 				iv.setOnClickListener(editItem);
 				//	Device Name
 				((TextView)v.findViewById(R.id.dev_name))
-					.setText(RangerFLink.finders.get(getIndex()).getName());
+					.setText(iDev.getName());
 				//	Stop Button
 				View stopButton = v.findViewById(R.id.dev_stop_alarm);
 				stopButton.setOnClickListener(stopLossLinkAlarm);
@@ -87,7 +87,7 @@ public class ItemDetailPage extends Fragment {
 			// TODO Auto-generated method stub
 			FragmentManager fm = getFragmentManager();
 			FragmentTransaction ft = fm.beginTransaction();
-			ft.replace(R.id.fragment1, ItemEditPage.newInstance(getIndex()));
+			ft.replace(R.id.fragment1, ItemEditPage.newInstance(getAddress()));
 			ft.addToBackStack(null);
 			ft.commit();
 		}
@@ -97,23 +97,17 @@ public class ItemDetailPage extends Fragment {
 		
 		@Override
 		public void onClick(View v) {
-			// TODO Auto-generated method stub
-			/*
-			boolean isBuzzerOn = ((RangerFLink)getActivity())
-					.getBuzzerState(iDev.getMac());
-			if(isBuzzerOn) {
-				isBuzzerOn = false;
-			} else {
-				isBuzzerOn = true;
-			}*/
+			//	TODO: set buzzer
+			iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 			((RangerFLink)getActivity())
-				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), false);
+				.buzzerOnOff(iDev.getMac(), false);
 			try {
-				Thread.sleep(100);
+				((RangerFLink)getActivity()).buzzerOnOff(iDev.getMac(), false);
+				Thread.sleep(50);
+				((RangerFLink)getActivity()).buzzerOnOff(iDev.getMac(), true);
+			} catch(NullPointerException n) {
 			} catch(Throwable e) {
 			}
-			((RangerFLink)getActivity())
-				.buzzerOnOff(RangerFLink.finders.get(getIndex()).getMac(), true);
 		}
 	};
 	
@@ -122,8 +116,9 @@ public class ItemDetailPage extends Fragment {
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
+			iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 			((RangerFLink)getActivity())
-				.resetFinder(RangerFLink.finders.get(getIndex()).getMac());
+				.resetFinder(iDev.getMac());
 			
 			FragmentManager fm = getFragmentManager();
 			for(int i = 0; i < fm.getBackStackEntryCount();i++) {

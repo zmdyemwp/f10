@@ -56,7 +56,7 @@ public class MainPage extends Fragment {
 					if( home.checkDeviceConnected(currentSelected) ) {
 						FragmentManager fm = home.getFragmentManager();
 						FragmentTransaction tran = fm.beginTransaction();
-						tran.replace(R.id.fragment1, ItemDetailPage.newInstance(arg2));
+						tran.replace(R.id.fragment1, ItemDetailPage.newInstance(currentSelected));
 						tran.addToBackStack(tag);
 						tran.commit();
 					} else {
@@ -75,14 +75,15 @@ public class MainPage extends Fragment {
 				}
 			};
 
-	static final int max_timeout = 5000;
+	static final int max_timeout = 6000;
 	int timeout = 0;
 	Handler h = new Handler();
 	Runnable r = new Runnable() {
 		@Override
 		public void run() {
 			// TODO Auto-generated method stub
-			if( home.checkDeviceConnected(currentSelected) ) {
+			//if( home.checkDeviceConnected(currentSelected) ) {
+			if( home.checkDeviceServiceReady(currentSelected) ) {
 				timeout = 0;
 				if(null != spd) {
 					spd.dismiss();
@@ -90,7 +91,7 @@ public class MainPage extends Fragment {
 				}
 				FragmentManager fm = home.getFragmentManager();
 				FragmentTransaction tran = fm.beginTransaction();
-				tran.replace(R.id.fragment1, ItemDetailPage.newInstance(currentSelectedIndex));
+				tran.replace(R.id.fragment1, ItemDetailPage.newInstance(currentSelected));
 				tran.addToBackStack(tag);
 				tran.commit();
 			}

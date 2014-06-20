@@ -82,22 +82,14 @@ public class RangerFLink extends Activity {
 		return fm;
 	}
 	
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        Intent i = new Intent();
-		i.setClassName("com.goldtek.rangefinder", "com.goldtek.rangefinder.BluetoothLeService");
-		startService(i);
-        
-        devImage = getSharedPreferences(DEV_IMAGE, 0);
-        devName = getSharedPreferences(DEV_NAME, 0);
-        //	Bluetooth
+	boolean InitBluetooth() {
+		//		Bluetooth
      	//	Use this check to determine whether BLE is supported on the device.  Then you can
         //	selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
             finish();
+            return false;
         }
         //	Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
         //	BluetoothAdapter through BluetoothManager.
@@ -107,8 +99,25 @@ public class RangerFLink extends Activity {
         if(null == ba) {
         	Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
             finish();
-            return;
+            return false;
         }
+        //	Ask to turn on Bluetooth
+        if (!ba.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+        return true;
+	}
+	
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Intent i = new Intent();
+		i.setClassName("com.goldtek.rangefinder", "com.goldtek.rangefinder.BluetoothLeService");
+		startService(i);
+        devImage = getSharedPreferences(DEV_IMAGE, 0);
+        devName = getSharedPreferences(DEV_NAME, 0);
 
         setContentView(R.layout.activity_main);
         DisplayMetrics dm = new DisplayMetrics();
@@ -140,13 +149,43 @@ public class RangerFLink extends Activity {
 	        } else {
 	        	fragmentTransaction.add(R.id.fragment1, new MainPage());
 		        fragmentTransaction.commit();
-		        scanLeDevice(true);
+		        //scanLeDevice(true);
 		    }
         } catch(Throwable e) {
         }
     }
 
+    @Override
+    protected void onResume() {
+    	super.onResume();
 
+    	if( !InitBluetooth() ) {
+    		return;
+    	}
+    	//	Connect to BLE service
+    	this.bindBleService();
+    	//	Register Receiver
+    	registerReceiver(bc, new IntentFilter(BluetoothLeService.LOSS_LINK_ALARM));
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(bc);
+        this.unbindBleService();
+        scanLeDevice(false);
+        //finders.clear();
+	}
+
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+    	Intent i = new Intent();
+		i.setClassName("com.goldtek.rangefinder", "com.goldtek.rangefinder.BluetoothLeService");
+    	stopService(i);
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -165,7 +204,7 @@ public class RangerFLink extends Activity {
         }
         return true;
     }
-    
+
     @Override
     public boolean onOptionsItemSelected (MenuItem item) {
     	if(R.id.action_settings == item.getItemId()) {
@@ -190,30 +229,6 @@ public class RangerFLink extends Activity {
 			this.moveTaskToBack(true);
 		}
     }
-    
-    @Override
-    protected void onResume() {
-    	super.onResume();
-    	if (!ba.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-
-    	//	Connect to BLE service
-    	this.bindBleService();
-    	//	Register Receiver
-    	registerReceiver(bc, new IntentFilter(BluetoothLeService.LOSS_LINK_ALARM));
-
-    }
-    
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(bc);
-        this.unbindBleService();
-        scanLeDevice(false);
-        //finders.clear();
-	}
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -233,7 +248,6 @@ public class RangerFLink extends Activity {
     	return this.currentFragment;
     }
 
-    
     /**********************************************************************
      * 
      * */
@@ -360,6 +374,17 @@ public class RangerFLink extends Activity {
 		finders.add(temp);
 		return finders.indexOf(temp);
 		//return -1;
+	}
+	
+	public ItemDetail getItem(final String address) {
+		for(ItemDetail i:finders) {
+			if(i.getMac().equals(address)) {
+				return i;
+			}
+		}
+		ItemDetail result = new ItemDetail(address); 
+		finders.add(result);
+		return result;
 	}
 	
 	public static int getTotal() {
@@ -504,6 +529,12 @@ public class RangerFLink extends Activity {
     		if(dev.getAddress().equals(address)) {
     			return true;
     		}
+    	}
+    	return false;
+    }
+    public boolean checkDeviceServiceReady(final String address) {
+    	if(null != mBluetoothLeService) {
+    		return mBluetoothLeService.checkDeviceServiceReady(address);
     	}
     	return false;
     }

@@ -1,5 +1,7 @@
 package com.goldtek.rangefinder;
 
+import com.goldtek.rangefinder.RangerFLink.ItemDetail;
+
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -15,16 +17,16 @@ public class ItemEditPage extends Fragment {
 	private static final String tag = "ItemEditPage";
 	private TextView tv = null;
 
-	public static ItemEditPage newInstance(int i) {
+	public static ItemEditPage newInstance(String i) {
 		ItemEditPage f = new ItemEditPage();
 		Bundle b = new Bundle();
-		b.putInt("index", i);
+		b.putString("address", i);
 		f.setArguments(b);
 		return f;
 	}
 	
-	private int getIndex() {
-		return this.getArguments().getInt("index");
+	private String getAddress() {
+		return this.getArguments().getString("address");
 	}
 	
 	public void onAttach(Activity activity) {
@@ -35,15 +37,16 @@ public class ItemEditPage extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		// Inflate the layout for this fragment
 		View v = null;
-		if(getIndex() < 0) {
+		if(null == getAddress()) {
 			//Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
+				ItemDetail iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 				v = inflater.inflate(R.layout.dev_item_edit, container, false);
 				((ImageView)v.findViewById(R.id.dev_icon)) 
-					.setImageBitmap((RangerFLink.finders.get(getIndex()).getThumbnail()));
+					.setImageBitmap(iDev.getThumbnail());
 				((TextView)v.findViewById(R.id.dev_name))
-					.setText(RangerFLink.finders.get(getIndex()).getName());
+					.setText(iDev.getName());
 				v.findViewById(R.id.camera_roll).setOnClickListener(openCameraRoll);
 				v.findViewById(R.id.gallery).setOnClickListener(openGallery);
 				tv = (TextView)v.findViewById(R.id.dev_name);
@@ -62,7 +65,7 @@ public class ItemEditPage extends Fragment {
 			// TODO Auto-generated method stub
 			FragmentManager fm = getFragmentManager();
 			FragmentTransaction ft = fm.beginTransaction();
-			ft.replace(R.id.fragment1, CameraRollPage.newInstance(getIndex()));
+			ft.replace(R.id.fragment1, CameraRollPage.newInstance(getAddress()));
 			ft.addToBackStack(null);
 			ft.commit();
 		}
@@ -75,7 +78,7 @@ public class ItemEditPage extends Fragment {
 			// TODO Auto-generated method stub
 			FragmentManager fm = getFragmentManager();
 			FragmentTransaction ft = fm.beginTransaction();
-			ft.replace(R.id.fragment1, GalleryPage.newInstance(getIndex()));
+			ft.replace(R.id.fragment1, GalleryPage.newInstance(getAddress()));
 			ft.addToBackStack(null);
 			ft.commit();
 		}
@@ -86,11 +89,12 @@ public class ItemEditPage extends Fragment {
 		@Override
 		public void onClick(View v) {
 			// TODO Auto-generated method stub
+			ItemDetail iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 			try {
-				RangerFLink.finders.get(getIndex()).SetName(tv.getText().toString());
+				iDev.SetName(tv.getText().toString());
 			} catch(Throwable e) {
 				//Log.d(tag, e.getLocalizedMessage());
-				RangerFLink.finders.get(getIndex()).SetName("");
+				iDev.SetName("");
 			}
 			FragmentManager fm = getFragmentManager();
 			fm.popBackStack();

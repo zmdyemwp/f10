@@ -18,16 +18,16 @@ import com.goldtek.rangefinder.RangerFLink.ItemDetail;
 public class CameraRollPage extends Fragment {
 	public static final String tag = "CameraRollPage";
 	
-	public static CameraRollPage newInstance(int  i) {
+	public static CameraRollPage newInstance(String  i) {
 		CameraRollPage f = new CameraRollPage();
 		Bundle b = new Bundle();
-		b.putInt("index", i);
+		b.putString("address", i);
 		f.setArguments(b);
 		return f;
 	}
 	
-	int getIndex() {
-		return this.getArguments().getInt("index");
+	String getAddress() {
+		return this.getArguments().getString("address");
 	}
 	
 	public void onAttach(Activity activity) {
@@ -67,10 +67,10 @@ public class CameraRollPage extends Fragment {
 					//Log.d(tag, String.format("onItemClick(%d)", arg2));
 					
 					ca.StopLoading();
-					if(getIndex() >= 0) {
-						ItemDetail i = RangerFLink.finders.get(getIndex());
-						i.SetThumbnail((Bitmap)ca.getItem(arg2));
-						i.SetImage(ca.getBitmapUri(arg2).toString());
+					if(getAddress() != null) {
+						ItemDetail iDev = ((RangerFLink)getActivity()).getItem(getAddress());
+						iDev.SetThumbnail((Bitmap)ca.getItem(arg2));
+						iDev.SetImage(ca.getBitmapUri(arg2).toString());
 						
 					}
 					// TODO Auto-generated method stub

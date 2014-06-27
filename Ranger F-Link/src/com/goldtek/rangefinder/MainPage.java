@@ -49,7 +49,6 @@ public class MainPage extends Fragment {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
-					//Log.d(tag, String.format("onItemClick(%d)", arg2));
 					// TODO: switch to device detail page
 					currentSelectedIndex = arg2;
 					currentSelected = RangerFLink.finders.get(arg2).getMac();

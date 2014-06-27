@@ -39,7 +39,6 @@ public class ItemDetailPage extends Fragment {
 		// Inflate the layout for this fragment
 		View v = null;
 		if(getAddress() == null) {
-			//Log.d(tag, "index: "+getIndex());
 		} else {
 			try {
 				iDev = ((RangerFLink)getActivity()).getItem(getAddress());
@@ -74,7 +73,6 @@ public class ItemDetailPage extends Fragment {
 					buzzerButton.setEnabled(false);
 				}
 			} catch(Throwable e) {
-				//Log.d(tag, e.getLocalizedMessage());
 			}
 		}
 		return v;

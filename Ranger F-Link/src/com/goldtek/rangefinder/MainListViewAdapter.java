@@ -61,15 +61,7 @@ public class MainListViewAdapter extends MainAdapter {
 
 		return listDevices.size();
 	}
-	
-	ItemDetail getFinder(final String address) {
-		for(ItemDetail i:RangerFLink.finders) {
-			if(i.getMac().equals(address)) {
-				return i;
-			}
-		}
-		return null;
-	}
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		// TODO Auto-generated method stub
@@ -86,7 +78,7 @@ public class MainListViewAdapter extends MainAdapter {
 			if(this.checkDeviceLost(address)) {
 				v.setBackground(c.getResources().getDrawable(R.drawable.red_round_rect));
 			}
-			ItemDetail i = getFinder(listDevices.get(position).getAddress());
+			ItemDetail i = ((RangerFLink)c).getItem(address);
 			((ImageView)v.findViewById(R.id.imageView1)).setImageBitmap(i.getThumbnail());
 			((TextView)v.findViewById(R.id.textView1)).setText(i.getName());
 		} catch(Throwable e) {

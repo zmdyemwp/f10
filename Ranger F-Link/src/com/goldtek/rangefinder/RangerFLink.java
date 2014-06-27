@@ -136,13 +136,11 @@ public class RangerFLink extends Activity {
 	        //	TODO:
 	        if(null != page &&
 	        		page.contains(BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION)) {
-	        	//Log.d(tag, BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
 	        	fragmentTransaction.replace(R.id.fragment1,
 	        			LossLinkNotification.newInstance(getIndex(mac)));
 	        	fragmentTransaction.addToBackStack(null).commit();
 	        } else if(null != page &&
 	        		page.contains(BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION)) {
-	        	//Log.d(tag, BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION);
 	        	fragmentTransaction.replace(R.id.fragment1,
 	        			LossLinkReconnection.newInstance(getIndex(mac)));
 	        	fragmentTransaction.addToBackStack(null).commit();
@@ -172,6 +170,7 @@ public class RangerFLink extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+
         unregisterReceiver(bc);
         this.unbindBleService();
         scanLeDevice(false);
@@ -192,7 +191,6 @@ public class RangerFLink extends Activity {
         getMenuInflater().inflate(R.menu.main, menu);
         
         if( !MainPage.class.equals(currentFragment.getClass())) {
-        	//Log.d(tag, "CURRENT FRAGMENT: "+currentFragment.getClass());
         	menu.findItem(R.id.action_scanning).setVisible(false);
         	menu.findItem(R.id.action_stop_scanning).setVisible(false);
         } else if(mScanning) {
@@ -325,7 +323,6 @@ public class RangerFLink extends Activity {
 	        						.notifyDataSetChanged();
                 		} catch(Throwable e) {
                 			if(null != e.getLocalizedMessage()) {
-                				//Log.d(tag, e.getLocalizedMessage());
                 			}
                 		}
         			}
@@ -357,7 +354,6 @@ public class RangerFLink extends Activity {
 			if(i.getMac().equalsIgnoreCase(dev.getAddress())) {
 				return true;
 			} else {
-				//Log.d(tag, String.format("%s :: %s", i.getMac(), dev.getAddress()));
 			}
 		}
 		return false;
@@ -403,8 +399,9 @@ public class RangerFLink extends Activity {
 
 	public class ItemDetail {
 		BluetoothDevice device;
-		String image = null;
-		String name = null;
+		String address = "";
+		String image = "";
+		String name = "";
 		Bitmap thumbnail = null;
 		public ItemDetail(BluetoothDevice dev) {
 			device = dev;
@@ -417,6 +414,7 @@ public class RangerFLink extends Activity {
 		
 		public ItemDetail(final String mac) {
 			device = null;
+			address = mac;
 			image = devImage.getString(mac, defaultImgUri);
 			name = devName.getString(mac,
 					getResources().getString(R.string.default_dev_name));
@@ -435,9 +433,7 @@ public class RangerFLink extends Activity {
 								.getBitmap(	getContentResolver(),
 											Uri.parse(image)),
 											image_width,image_width,false);
-				//Log.d(tag, "createThumbnail()::"+image);
 			} catch(Throwable e) {
-				//Log.d(tag, e.getLocalizedMessage());
 				try {
 					image = defaultImgUri;
 					thumbnail = Bitmap.createScaledBitmap(
@@ -446,12 +442,21 @@ public class RangerFLink extends Activity {
 										Uri.parse(image)),
 										image_width,image_width,false);
 				} catch(Throwable ee) {
-					//Log.d(tag, ee.getLocalizedMessage());
 				}
 			}
 		}
 		public String getMac() {
-			return device.getAddress();
+			String result = "";
+			try {
+				if(null == device) {
+					result = address;
+				} else {
+					result = device.getAddress();
+				}
+			} catch(Throwable e) {
+				result = "";
+			}
+			return result; 
 		}
 		public String getName() {
 			//return device.getName();
@@ -495,7 +500,6 @@ public class RangerFLink extends Activity {
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
             if (!mBluetoothLeService.initialize()) {
-                //Log.e(tag, "Unable to initialize Bluetooth");
                 finish();
             }
         }

@@ -38,7 +38,9 @@ public class RangerFLink extends Activity {
 	Fragment currentFragment = null;
 	BluetoothAdapter ba = null;
 	private static final int REQUEST_ENABLE_BT = 1;
+	private static boolean bCancle = false;
 	/*************************************************************************/
+	public static final String TERMINATOR = "RANGER_W_TERMINATOR";
 	BroadcastReceiver bc = new BroadcastReceiver() {
 
 		@Override
@@ -69,6 +71,8 @@ public class RangerFLink extends Activity {
 						tran.commit();
 					}
 				}
+			} else if(intent.getAction().equals(TERMINATOR)) {
+				finish();
 			}
 		}
 
@@ -103,6 +107,7 @@ public class RangerFLink extends Activity {
         }
         //	Ask to turn on Bluetooth
         if (!ba.isEnabled()) {
+        	bCancle = false;
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
@@ -157,6 +162,12 @@ public class RangerFLink extends Activity {
     protected void onResume() {
     	super.onResume();
 
+    	if(bCancle) {
+    		bCancle = false;
+    		finish();
+    		return;
+    	}
+
     	if( !InitBluetooth() ) {
     		return;
     	}
@@ -171,9 +182,14 @@ public class RangerFLink extends Activity {
     protected void onPause() {
         super.onPause();
 
-        unregisterReceiver(bc);
-        this.unbindBleService();
-        scanLeDevice(false);
+        try {
+        	if( !bCancle) {
+		        unregisterReceiver(bc);
+		        this.unbindBleService();
+		        scanLeDevice(false);
+        	}
+        } catch(Throwable e) {
+        }
         //finders.clear();
 	}
 
@@ -232,6 +248,7 @@ public class RangerFLink extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // User chose not to enable Bluetooth.
         if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
+        	bCancle = true;
             finish();
             return;
         }

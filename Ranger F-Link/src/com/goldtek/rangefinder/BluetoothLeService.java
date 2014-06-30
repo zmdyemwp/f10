@@ -2,6 +2,8 @@ package com.goldtek.rangefinder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import android.app.Service;
@@ -16,6 +18,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -106,6 +109,7 @@ public class BluetoothLeService extends Service {
 				if (checkGattExist(mac)) {
 					if(!lostDev.contains(gatt)) {
 						lostDev.add(gatt);
+						BluetoothLeService.this.PrefAddLostDev(mac);
 					}
 					Intent i = new Intent();
 					i.setClassName("com.goldtek.rangefinder",
@@ -346,12 +350,46 @@ public class BluetoothLeService extends Service {
 		conn.close();
 	}
 
+	/**
+	 * SharedPreferences to keep lost devices as a
+	 * backup for cases that application is forced to stop.
+	 * */
+	static private final String lost_devs = "Ranger.F.Link.Lost.Devices";
+	SharedPreferences prefLostDev;
+	void PrefAddLostDev(String dev) {
+		Set<String> set = prefLostDev
+				.getStringSet(lost_devs, new TreeSet<String>());
+		if(!set.contains(dev)) {
+			set.add(dev);
+		}
+		prefLostDev.edit().putStringSet(lost_devs, set).commit();
+	}
+	boolean PrefCheckDevLost(String dev) {
+		boolean result = false;
+		result = prefLostDev.contains(dev);
+		return result;
+	}
+	void PrefRemoveLostDev(String dev) {
+		Set<String> set = prefLostDev
+				.getStringSet(lost_devs, new TreeSet<String>());
+		if(set.contains(dev)) {
+			set.remove(dev);
+		}
+		prefLostDev.edit().putStringSet(lost_devs, set).commit();
+	}
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();
+		prefLostDev = getSharedPreferences(lost_devs, 0);
+	}
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 		removeAll();
 	}
-	
+
 	public void removeAll() {
 		bCallBackBlock = true;
 		for (BluetoothGatt conn : mBluetoothGatts) {

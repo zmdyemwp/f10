@@ -9,6 +9,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,34 +34,50 @@ public class LossLinkNotification extends Fragment {
 		return this.getArguments().getInt("index");
 	}
 	
-	MediaPlayer mp;
+	public static void stopAlarm() {
+		try {
+			if(null != mp) {
+				h.removeCallbacks(r);
+				mp.stop();
+				mp.reset();
+				mp.release();
+			}
+		} catch(Throwable e) {
+		}
+	}
+
+	static Activity parent;
+	static MediaPlayer mp;
+
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
+		parent = activity;
 		((RangerFLink)activity).setCurrentFragment(this);
-		// TODO: Start Alarm
+		/* 	Start Alarm
 		mp = MediaPlayer.create(getActivity(), R.raw.beep);
 		mp.setLooping(true);
 		mp.start();
-		h.post(r);
+		h.post(r);*/
 	}
 	
 	@Override
-	public void onDetach() {
-		super.onDetach();
+	public void onDestroyView() {
+		super.onDestroyView();
 		//	TODO: Stop Alarm
 		h.removeCallbacks(r);
 		mp.stop();
+		mp.reset();
 		mp.release();
+		Log.d(tag, "onDestroyView() >>> >>> >>>");
 	}
 	
-	Handler h = new Handler();
-	Runnable r = new Runnable() {
+	static Handler h = new Handler();
+	static Runnable r = new Runnable() {
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			try {
-				Vibrator vb = (Vibrator)getActivity()
+				Vibrator vb = (Vibrator)parent//getActivity()
 						.getSystemService(Context.VIBRATOR_SERVICE);
 		    	vb.vibrate(300);
 			} catch(NullPointerException n) {
@@ -70,7 +87,7 @@ public class LossLinkNotification extends Fragment {
 			}
 	    	h.postDelayed(r, 500);
 		}
-		
+
 	};
 	
 	ItemDetail iDev;
@@ -87,6 +104,13 @@ public class LossLinkNotification extends Fragment {
 		//	Stop Notification Button
 		View stopNotification = v.findViewById(R.id.dev_stop_notification);
 		stopNotification.setOnClickListener(stopNotificationClick);
+		
+		// TODO: Start Alarm
+		mp = MediaPlayer.create(getActivity(), R.raw.beep);
+		mp.setLooping(true);
+		mp.start();
+		h.post(r);
+
 		return v;
 	}
 
@@ -94,7 +118,6 @@ public class LossLinkNotification extends Fragment {
 		
 		@Override
 		public void onClick(View v) {
-			// TODO Auto-generated method stub
 			FragmentManager fmgr = fmgrClear();
 			FragmentTransaction ftran = fmgr.beginTransaction();
 			ftran.replace(R.id.fragment1, new MainPage());

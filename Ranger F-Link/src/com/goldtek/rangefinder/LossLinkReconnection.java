@@ -42,6 +42,8 @@ private static final String tag = "LossLinkReconnection";
 	
 	ItemDetail iDev;
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+		//	TODO: Stop Notification Alarm
+		LossLinkNotification.stopAlarm();
 		// Inflate the layout for this fragment
 		View v = inflater.inflate(R.layout.loss_link_reconnection, container, false);
 //		Device Image
@@ -61,7 +63,6 @@ private static final String tag = "LossLinkReconnection";
 		
 		@Override
 		public void onClick(View v) {
-			// TODO Auto-generated method stub
 			((RangerFLink)getActivity())
 				.resetFinder(RangerFLink.finders.get(getIndex()).getMac());
 			FragmentManager fmgr = fmgrClear();

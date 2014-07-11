@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.util.Log;
 
 public class BluetoothLeService extends Service {
 
@@ -72,6 +73,7 @@ public class BluetoothLeService extends Service {
 
 			String intentAction;
 			if (newState == BluetoothProfile.STATE_CONNECTED) {
+				Log.d(TAG, "BluetoothProfile.STATE_CONNECTED");
 				intentAction = ACTION_GATT_CONNECTED;
 				mConnectionState = STATE_CONNECTED;
 				broadcastUpdate(intentAction);
@@ -109,7 +111,7 @@ public class BluetoothLeService extends Service {
 				if (checkGattExist(mac)) {
 					if(!lostDev.contains(gatt)) {
 						lostDev.add(gatt);
-						BluetoothLeService.this.PrefAddLostDev(mac);
+						PrefAddLostDev(mac);
 					}
 					Intent i = new Intent();
 					i.setClassName("com.goldtek.rangefinder",
@@ -269,15 +271,16 @@ public class BluetoothLeService extends Service {
 		if (mBluetoothManager == null) {
 			mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 			if (mBluetoothManager == null) {
+				Log.d(TAG, "mBluetoothManager == null");
 				return false;
 			}
 		}
-
 		mBluetoothAdapter = mBluetoothManager.getAdapter();
 		if (mBluetoothAdapter == null) {
+			Log.d(TAG, "mBluetoothAdapter == null");
 			return false;
 		}
-
+		PrefReconnectAll();
 		return true;
 	}
 
@@ -357,19 +360,30 @@ public class BluetoothLeService extends Service {
 	static private final String lost_devs = "Ranger.F.Link.Lost.Devices";
 	SharedPreferences prefLostDev;
 	void PrefAddLostDev(String dev) {
+		Log.d(TAG, "PrefAddLostDev("+dev+")");
 		Set<String> set = prefLostDev
 				.getStringSet(lost_devs, new TreeSet<String>());
+		int presize = set.size();
 		if(!set.contains(dev)) {
 			set.add(dev);
 		}
 		prefLostDev.edit().putStringSet(lost_devs, set).commit();
+		set = prefLostDev
+				.getStringSet(lost_devs, new TreeSet<String>());
+		Log.d(TAG, String.format("%d => %d", presize, set.size()));
 	}
+
 	boolean PrefCheckDevLost(String dev) {
+		Log.d(TAG, "PrefCheckDevLost("+dev+")");
 		boolean result = false;
-		result = prefLostDev.contains(dev);
+		Set<String> set = prefLostDev
+				.getStringSet(lost_devs, new TreeSet<String>());
+		result = set.contains(dev);
 		return result;
 	}
+
 	void PrefRemoveLostDev(String dev) {
+		Log.d(TAG, "PrefRemoveLostDev("+dev+")");
 		Set<String> set = prefLostDev
 				.getStringSet(lost_devs, new TreeSet<String>());
 		if(set.contains(dev)) {
@@ -377,7 +391,42 @@ public class BluetoothLeService extends Service {
 		}
 		prefLostDev.edit().putStringSet(lost_devs, set).commit();
 	}
+
+	void PrefRemoveAll() {
+		Log.d(TAG, "PrefRemoveAll()");
+		prefLostDev.edit().putStringSet(lost_devs, null).commit();
+	}
 	
+	void PrefReconnectAll() {
+		Log.d(TAG, "PrefReconnectAll()");
+		if (mBluetoothAdapter == null) {
+			Log.d(TAG, "XXXXXXXXXXXXXXXXXX");
+			return;
+		}
+		Set<String> set = prefLostDev
+				.getStringSet(lost_devs, new TreeSet<String>());
+		Log.d(TAG, String.format("size of set<String> == %d", set.size()));
+		for(String add:set) {
+			BluetoothDevice dev = mBluetoothAdapter.getRemoteDevice(add);
+			BluetoothGatt gatt = dev.connectGatt(this, true, mGattCallback);
+			gatt.connect();
+			if( !mBluetoothGatts.contains(gatt)) {
+				Log.d(TAG, "++PrefReconnectAll::"+gatt.getDevice().getAddress());
+				mBluetoothGatts.add(gatt);
+			} else {
+				Log.d(TAG, "--PrefReconnectAll::"+gatt.getDevice().getAddress());
+			}
+			if( !lostDev.contains(gatt)) {
+				Log.d(TAG, "++PrefReconnectAll::"+gatt.getDevice().getAddress());
+				lostDev.add(gatt);
+			} else {
+				Log.d(TAG, "--PrefReconnectAll::"+gatt.getDevice().getAddress());
+			}
+		}
+	}
+
+
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -397,6 +446,7 @@ public class BluetoothLeService extends Service {
 			conn.close();
 		}
 		mBluetoothGatts.clear();
+		//PrefRemoveAll();
 	}
 
 	public void disconnect(final String address) {
@@ -411,6 +461,7 @@ public class BluetoothLeService extends Service {
 			removeConn(targetConn);
 		}
 		// mBluetoothGatt.disconnect();
+		this.PrefRemoveLostDev(address);
 	}
 
 	/**
@@ -502,6 +553,7 @@ public class BluetoothLeService extends Service {
 			List<BluetoothDevice> devs = mBluetoothManager
 					.getConnectedDevices(BluetoothGatt.GATT);
 			result = new ArrayList<BluetoothDevice>(devs);
+			Log.d(TAG, "getConnectedDevices()::"+result.size());
 			return result;
 		}
 		return null;
@@ -637,6 +689,7 @@ public class BluetoothLeService extends Service {
 			}
 		}
 		lostDev.remove(target);
+		PrefRemoveLostDev(address);
 	}
 
 	/**
@@ -649,7 +702,6 @@ public class BluetoothLeService extends Service {
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			for (BluetoothGatt dev : lostDev) {
 				if (!checkDevConnected(dev.getDevice().getAddress())) {
 					if (dev.connect()) {

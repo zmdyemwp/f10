@@ -361,8 +361,8 @@ public class RangerFLink extends Activity {
 	 * **/
 	public static final String DEV_IMAGE = "ImagePref";
 	public static final String DEV_NAME = "NamePref";
-	SharedPreferences devImage;
-	SharedPreferences devName;
+	static SharedPreferences devImage;
+	static SharedPreferences devName;
 	private static final String defaultImgUri = "android.resource://com.goldtek.rangefinder/drawable/dev_default";
 	private static int total = 0;
 	public static ArrayList<ItemDetail> finders = new ArrayList<ItemDetail>();

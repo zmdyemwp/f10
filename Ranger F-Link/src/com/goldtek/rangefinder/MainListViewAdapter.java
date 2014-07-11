@@ -26,6 +26,7 @@ public class MainListViewAdapter extends MainAdapter {
 					listDevices = new ArrayList<BluetoothDevice>();
 
 	boolean checkDeviceLost(final String address) {
+		lostDevices = ((RangerFLink)c).getLostDevices();
 		for(BluetoothDevice dev:lostDevices) {
 			if(dev.getAddress().equals(address)) {
 				return true;

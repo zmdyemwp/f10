@@ -113,7 +113,9 @@ public class ItemDetailPage extends Fragment {
 		
 		@Override
 		public void onClick(View v) {
-			// TODO Auto-generated method stub
+			//	TODO: Stop Notification Alarm
+			LossLinkNotification.stopAlarm();
+			
 			iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 			((RangerFLink)getActivity())
 				.resetFinder(iDev.getMac());

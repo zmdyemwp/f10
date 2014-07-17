@@ -5,6 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+/**
+ *		This broadcast receiver is used to monitor the BT status
+ *		when the BT is turned off, terminate the main Activity. 
+ */
+
 public class BTBroadcastRecver extends BroadcastReceiver {
 
 	static private final String tag = "BTBroadcastRecver";
@@ -15,16 +20,12 @@ public class BTBroadcastRecver extends BroadcastReceiver {
 		if(action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
 			switch(state) {
 				case BluetoothAdapter.STATE_OFF:
-					//Log.d(tag, "BluetoothAdapter.STATE_OFF");
 					break;
 				case BluetoothAdapter.STATE_ON:
-					//Log.d(tag, "BluetoothAdapter.STATE_ON");
 					break;
 				case BluetoothAdapter.STATE_TURNING_ON:
-					//Log.d(tag, "BluetoothAdapter.STATE_TURNING_ON");
 					break;
 				case BluetoothAdapter.STATE_TURNING_OFF:
-					//Log.d(tag, "BluetoothAdapter.STATE_TURNING_OFF");
 					TerminateMainActivity(context);
 					break;
 				default:

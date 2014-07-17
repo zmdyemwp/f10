@@ -9,7 +9,6 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +67,6 @@ public class LossLinkNotification extends Fragment {
 		mp.stop();
 		mp.reset();
 		mp.release();
-		Log.d(tag, "onDestroyView() >>> >>> >>>");
 	}
 	
 	static Handler h = new Handler();

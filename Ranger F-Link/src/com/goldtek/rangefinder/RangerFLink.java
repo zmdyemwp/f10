@@ -42,7 +42,6 @@ public class RangerFLink extends Activity {
 	/*************************************************************************/
 	public static final String TERMINATOR = "RANGER_W_TERMINATOR";
 	BroadcastReceiver bc = new BroadcastReceiver() {
-
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			if(intent.getAction().equals(BluetoothLeService.LOSS_LINK_ALARM)) {
@@ -75,7 +74,6 @@ public class RangerFLink extends Activity {
 				finish();
 			}
 		}
-
 	};
 	
 	FragmentManager fmgrClear() {

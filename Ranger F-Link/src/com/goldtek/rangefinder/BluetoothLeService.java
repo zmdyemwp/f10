@@ -43,7 +43,7 @@ public class BluetoothLeService extends Service {
 	private static final int STATE_CONNECTING = 1;
 	private static final int STATE_CONNECTED = 2;
 
-	public final static String ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
+	//public final static String ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
 	public final static String ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
 	public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
 	public final static String ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
@@ -72,9 +72,11 @@ public class BluetoothLeService extends Service {
 
 			String intentAction;
 			if (newState == BluetoothProfile.STATE_CONNECTED) {
-				intentAction = ACTION_GATT_CONNECTED;
 				mConnectionState = STATE_CONNECTED;
-				broadcastUpdate(intentAction);
+
+				/** intentAction = ACTION_GATT_CONNECTED;
+					broadcastUpdate(intentAction);*/
+
 				// Attempts to discover services after successful connection.
 				gatt.discoverServices();
 				// TODO: check if the device is belong to loss-link list
@@ -100,9 +102,6 @@ public class BluetoothLeService extends Service {
 				}
 
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-				intentAction = ACTION_GATT_DISCONNECTED;
-				mConnectionState = STATE_DISCONNECTED;
-				broadcastUpdate(intentAction);
 				// TODO: check if the device is belong to connect list
 				// if not, this is a loss link!
 				final String mac = gatt.getDevice().getAddress();

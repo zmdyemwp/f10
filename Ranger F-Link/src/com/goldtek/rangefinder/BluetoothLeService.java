@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.util.Log;
 
 public class BluetoothLeService extends Service {
 
@@ -70,11 +71,10 @@ public class BluetoothLeService extends Service {
 				return ;
 			}
 
-			String intentAction;
 			if (newState == BluetoothProfile.STATE_CONNECTED) {
 				mConnectionState = STATE_CONNECTED;
 
-				/** intentAction = ACTION_GATT_CONNECTED;
+				/** String intentAction = ACTION_GATT_CONNECTED;
 					broadcastUpdate(intentAction);*/
 
 				// Attempts to discover services after successful connection.
@@ -83,6 +83,7 @@ public class BluetoothLeService extends Service {
 				// if it does, this is a reconnection
 				final String mac = gatt.getDevice().getAddress();
 				if (checkDevLost(mac)) {
+					Log.d(TAG, "++++++++++++++++++++Reconnection!");
 					Intent i = new Intent();
 					i.setClassName("com.goldtek.rangefinder",
 							"com.goldtek.rangefinder.RangerFLink");
@@ -104,28 +105,30 @@ public class BluetoothLeService extends Service {
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 				// TODO: check if the device is belong to connect list
 				// if not, this is a loss link!
+				gatt.connect();		//	used to reconnect to the device.
 				final String mac = gatt.getDevice().getAddress();
 				if (checkGattExist(mac)) {
 					if(!lostDev.contains(gatt)) {
 						lostDev.add(gatt);
 						PrefAddLostDev(mac);
+
+						Intent i = new Intent();
+						i.setClassName("com.goldtek.rangefinder",
+								"com.goldtek.rangefinder.RangerFLink");
+						i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						i.putExtra("page",
+								BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
+						i.putExtra("mac", mac);
+						i.setAction(Intent.ACTION_MAIN);
+						i.addCategory(Intent.CATEGORY_LAUNCHER);
+						startActivity(i);
+						try {
+							Thread.sleep(500);
+						} catch (Throwable e) {
+						}
+						broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice()
+								.getAddress(), LOSS_LINK_ALARM_DISCONNECTION);
 					}
-					Intent i = new Intent();
-					i.setClassName("com.goldtek.rangefinder",
-							"com.goldtek.rangefinder.RangerFLink");
-					i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					i.putExtra("page",
-							BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
-					i.putExtra("mac", mac);
-					i.setAction(Intent.ACTION_MAIN);
-					i.addCategory(Intent.CATEGORY_LAUNCHER);
-					startActivity(i);
-					try {
-						Thread.sleep(500);
-					} catch (Throwable e) {
-					}
-					broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice()
-							.getAddress(), LOSS_LINK_ALARM_DISCONNECTION);
 				}
 			}
 		}
@@ -208,7 +211,7 @@ public class BluetoothLeService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		if (!bStart) {
-			h.post(rReconnectThread);
+			//h.post(rReconnectThread);
 			bStart = true;
 			PowerManager pm = (PowerManager) getBaseContext().getSystemService(
 					Context.POWER_SERVICE);
@@ -242,7 +245,7 @@ public class BluetoothLeService extends Service {
 
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if (!bStart) {
-			h.post(rReconnectThread);
+			//h.post(rReconnectThread);
 			bStart = true;
 			PowerManager pm = (PowerManager) getBaseContext().getSystemService(
 					Context.POWER_SERVICE);
@@ -440,7 +443,6 @@ public class BluetoothLeService extends Service {
 		if (null != targetConn) {
 			removeConn(targetConn);
 		}
-		// mBluetoothGatt.disconnect();
 		PrefRemoveLostDev(address);
 	}
 
@@ -654,7 +656,9 @@ public class BluetoothLeService extends Service {
 
 	public void resetFinder(final String address) {
 		// setFinder(address, false);
-		removeLostDev(address);
+		while(this.checkDevLost(address)) {
+			removeLostDev(address);
+		}
 		setFinder(address, true);
 	}
 
@@ -677,7 +681,7 @@ public class BluetoothLeService extends Service {
 	 * */
 	ArrayList<BluetoothGatt> lostDev = new ArrayList<BluetoothGatt>();
 	Handler h = new Handler();
-	Runnable rReconnectThread = new Runnable() {
+	/*Runnable rReconnectThread = new Runnable() {
 
 		@Override
 		public void run() {
@@ -691,7 +695,7 @@ public class BluetoothLeService extends Service {
 			h.postDelayed(rReconnectThread, 2000);
 		}
 
-	};
+	};*/
 
 	boolean checkDevConnected(final String address) {
 		ArrayList<BluetoothDevice> devs = this.getConnectedDevices();

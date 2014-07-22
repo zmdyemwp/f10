@@ -7,6 +7,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,8 +64,11 @@ private static final String tag = "LossLinkReconnection";
 		
 		@Override
 		public void onClick(View v) {
+			//	Reset Device
 			((RangerFLink)getActivity())
 				.resetFinder(RangerFLink.finders.get(getIndex()).getMac());
+
+			//	Switch Fragment
 			FragmentManager fmgr = fmgrClear();
 			FragmentTransaction ftran = fmgr.beginTransaction();
 			ftran.replace(R.id.fragment1, new ListPage());

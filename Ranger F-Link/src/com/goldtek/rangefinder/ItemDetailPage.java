@@ -5,6 +5,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -119,7 +120,7 @@ public class ItemDetailPage extends Fragment {
 			iDev = ((RangerFLink)getActivity()).getItem(getAddress());
 			((RangerFLink)getActivity())
 				.resetFinder(iDev.getMac());
-			
+
 			FragmentManager fm = getFragmentManager();
 			for(int i = 0; i < fm.getBackStackEntryCount();i++) {
 				fm.popBackStack();

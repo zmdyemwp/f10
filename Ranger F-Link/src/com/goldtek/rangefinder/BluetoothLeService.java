@@ -82,11 +82,11 @@ public class BluetoothLeService extends Service {
 				// TODO: check if the device is belong to loss-link list
 				// if it does, this is a reconnection
 				final String mac = gatt.getDevice().getAddress();
-				if (checkDevLost(mac) && !confirmDev.contains(gatt)) {
+				if (checkDevLost(mac) && !confirmDev.contains(gatt) && checkDevConnected(mac)) {
 					Log.d(TAG, "++++++ConfirmAdd()");
 					confirmDev.add(gatt);
 					Log.d(TAG, "++++++++++++++++++++ Reconnection!");
-					Intent i = new Intent();
+					/*Intent i = new Intent();
 					i.setClassName("com.goldtek.rangefinder",
 							"com.goldtek.rangefinder.RangerFLink");
 					i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -98,7 +98,7 @@ public class BluetoothLeService extends Service {
 					startActivity(i);
 					try {
 						Thread.sleep(500);
-					} catch (Throwable e) {}
+					} catch (Throwable e) {}*/
 					broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice()
 							.getAddress(), LOSS_LINK_ALARM_RECONNECTION);
 				}
@@ -723,13 +723,13 @@ public class BluetoothLeService extends Service {
 	 * Device list: keep devices waiting for confirm.
 	 *	Use this list to avoid repeatedly showing confirm page. 
 	 */
-	ArrayList<BluetoothGatt> confirmDev = new ArrayList<BluetoothGatt>();
+	static ArrayList<BluetoothGatt> confirmDev = new ArrayList<BluetoothGatt>();
 
 	/**
 	 * Lost Link List Keep all lost link try to reconnect to the device wait for
 	 * resetting of the finder remove the device from lost list after reset
 	 * */
-	ArrayList<BluetoothGatt> lostDev = new ArrayList<BluetoothGatt>();
+	static ArrayList<BluetoothGatt> lostDev = new ArrayList<BluetoothGatt>();
 
 	boolean checkDevConnected(final String address) {
 		ArrayList<BluetoothDevice> devs = this.getConnectedDevices();

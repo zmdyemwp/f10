@@ -163,6 +163,8 @@ public class RangerFLink extends Activity {
     protected void onResume() {
     	super.onResume();
 
+    	Log.d(tag, "++++++++OnResume()");
+    	
     	if(bCancle) {
     		bCancle = false;
     		finish();

@@ -82,8 +82,9 @@ public class BluetoothLeService extends Service {
 				// TODO: check if the device is belong to loss-link list
 				// if it does, this is a reconnection
 				final String mac = gatt.getDevice().getAddress();
-				if (checkDevLost(mac)) {
-					Log.d(TAG, "++++++++++++++++++++Reconnection!");
+				if (checkDevLost(mac) && !confirmDev.contains(gatt)) {
+					confirmDev.add(gatt);
+					Log.d(TAG, "++++++++++++++++++++ Reconnection!");
 					Intent i = new Intent();
 					i.setClassName("com.goldtek.rangefinder",
 							"com.goldtek.rangefinder.RangerFLink");
@@ -96,22 +97,24 @@ public class BluetoothLeService extends Service {
 					startActivity(i);
 					try {
 						Thread.sleep(500);
-					} catch (Throwable e) {
-					}
+					} catch (Throwable e) {}
 					broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice()
 							.getAddress(), LOSS_LINK_ALARM_RECONNECTION);
 				}
 
 			} else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 				// TODO: check if the device is belong to connect list
-				// if not, this is a loss link!
-				gatt.connect();		//	used to reconnect to the device.
+				// if it does, this is a loss link!
 				final String mac = gatt.getDevice().getAddress();
+				try {
+					confirmDev.remove(gatt);
+				} catch(Throwable e) {};
 				if (checkGattExist(mac)) {
+					//	close old GATT connection and make a new one.
+					refreshConn(gatt);
 					if(!lostDev.contains(gatt)) {
 						lostDev.add(gatt);
 						PrefAddLostDev(mac);
-
 						Intent i = new Intent();
 						i.setClassName("com.goldtek.rangefinder",
 								"com.goldtek.rangefinder.RangerFLink");
@@ -346,11 +349,39 @@ public class BluetoothLeService extends Service {
 	 * callback.
 	 */
 	void removeConn(BluetoothGatt conn) {
-		mBluetoothGatts.remove(conn);
+		while(mBluetoothGatts.contains(conn)) {
+			mBluetoothGatts.remove(conn);
+		}
 		conn.disconnect();
 		conn.close();
 	}
 
+	/**
+	 * Refresh Connection by closing old gatt connection and instantiate a
+	 * new one to avoid unstable connection.
+	 * */
+	void refreshConn(BluetoothGatt conn) {
+		String address = conn.getDevice().getAddress();
+		removeConn(conn);
+		BluetoothDevice dev = mBluetoothAdapter.getRemoteDevice(address);
+		BluetoothGatt gatt = dev.connectGatt(this, false, mGattCallback);
+		gatt.connect();
+		if( !mBluetoothGatts.contains(gatt)) {
+			mBluetoothGatts.add(gatt);
+		} else {
+		}
+		/**
+		 * TODO:
+		 * Do NOT do this here, to specify the case to
+		 * show Lost-Link Notification.
+		 * When disconnection happens and lostDev does NOT contain
+		 * this GATT connection, that will be considered as Lost-Link.
+		 * And the Notification Page will be shown.
+		 * if( !lostDev.contains(gatt)) {
+			lostDev.add(gatt);
+		} else {}*/
+	}
+	
 	/**
 	 * SharedPreferences to keep lost devices as a
 	 * backup for cases that application is forced to stop.
@@ -656,6 +687,7 @@ public class BluetoothLeService extends Service {
 
 	public void resetFinder(final String address) {
 		// setFinder(address, false);
+		//	TODO: Confirm
 		while(this.checkDevLost(address)) {
 			removeLostDev(address);
 		}
@@ -676,26 +708,16 @@ public class BluetoothLeService extends Service {
 	}
 
 	/**
+	 * Device list: keep devices waiting for confirm.
+	 *	Use this list to avoid repeatedly showing confirm page. 
+	 */
+	ArrayList<BluetoothGatt> confirmDev = new ArrayList<BluetoothGatt>();
+
+	/**
 	 * Lost Link List Keep all lost link try to reconnect to the device wait for
 	 * resetting of the finder remove the device from lost list after reset
 	 * */
 	ArrayList<BluetoothGatt> lostDev = new ArrayList<BluetoothGatt>();
-	Handler h = new Handler();
-	/*Runnable rReconnectThread = new Runnable() {
-
-		@Override
-		public void run() {
-			for (BluetoothGatt dev : lostDev) {
-				if (!checkDevConnected(dev.getDevice().getAddress())) {
-					if (dev.connect()) {
-					} else {
-					}
-				}
-			}
-			h.postDelayed(rReconnectThread, 2000);
-		}
-
-	};*/
 
 	boolean checkDevConnected(final String address) {
 		ArrayList<BluetoothDevice> devs = this.getConnectedDevices();

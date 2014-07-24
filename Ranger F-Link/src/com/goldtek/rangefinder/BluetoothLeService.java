@@ -83,6 +83,7 @@ public class BluetoothLeService extends Service {
 				// if it does, this is a reconnection
 				final String mac = gatt.getDevice().getAddress();
 				if (checkDevLost(mac) && !confirmDev.contains(gatt)) {
+					Log.d(TAG, "++++++ConfirmAdd()");
 					confirmDev.add(gatt);
 					Log.d(TAG, "++++++++++++++++++++ Reconnection!");
 					Intent i = new Intent();
@@ -107,12 +108,14 @@ public class BluetoothLeService extends Service {
 				// if it does, this is a loss link!
 				final String mac = gatt.getDevice().getAddress();
 				try {
+					Log.d(TAG, "------ConfirmRemove()");
 					confirmDev.remove(gatt);
 				} catch(Throwable e) {};
 				if (checkGattExist(mac)) {
 					//	close old GATT connection and make a new one.
 					refreshConn(gatt);
-					if(!lostDev.contains(gatt)) {
+					//if(!lostDev.contains(gatt)) {
+					if(!checkLostDev(mac)) {
 						lostDev.add(gatt);
 						PrefAddLostDev(mac);
 						Intent i = new Intent();
@@ -305,6 +308,15 @@ public class BluetoothLeService extends Service {
 		return false;
 	}
 
+	boolean checkLostDev(final String address) {
+		for(BluetoothGatt dev: this.lostDev) {
+			if(dev.getDevice().getAddress().equals(address)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public boolean connect(final String address) {
 		if (mBluetoothAdapter == null || address == null) {
 			return false;

@@ -50,8 +50,6 @@ public class ListPage extends Fragment {
 				@Override
 				public void onItemClick(AdapterView<?> arg0, View arg1,
 						int arg2, long arg3) {
-					//Log.d("ListPage", String.format("onItemClick(%d)", arg2));
-					// TODO Auto-generated method stub
 					FragmentManager fm = getActivity().getFragmentManager();
 					FragmentTransaction tran = fm.beginTransaction();
 					String address = MainListViewAdapter.listDevices.get(arg2).getAddress();
@@ -66,7 +64,6 @@ public class ListPage extends Fragment {
 				@Override
 				public boolean onItemLongClick(AdapterView<?> parent, View view,
 						int position, long id) {
-					// TODO Auto-generated method stub
 					//Log.d(tag, "Item Long Pressed: "+position);
 					((RangerFLink)getActivity())
 						.disconnectBleDevice(MainListViewAdapter.listDevices.get(position).getAddress());

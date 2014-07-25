@@ -20,11 +20,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
-import android.util.Log;
 
 public class BluetoothLeService extends Service {
 
@@ -83,9 +81,7 @@ public class BluetoothLeService extends Service {
 				// if it does, this is a reconnection
 				final String mac = gatt.getDevice().getAddress();
 				if (checkDevLost(mac) && !confirmDev.contains(gatt) && checkDevConnected(mac)) {
-					Log.d(TAG, "++++++ConfirmAdd()");
 					confirmDev.add(gatt);
-					Log.d(TAG, "++++++++++++++++++++ Reconnection!");
 					/*Intent i = new Intent();
 					i.setClassName("com.goldtek.rangefinder",
 							"com.goldtek.rangefinder.RangerFLink");
@@ -108,7 +104,6 @@ public class BluetoothLeService extends Service {
 				// if it does, this is a loss link!
 				final String mac = gatt.getDevice().getAddress();
 				try {
-					Log.d(TAG, "------ConfirmRemove()");
 					confirmDev.remove(gatt);
 				} catch(Throwable e) {};
 				if (checkGattExist(mac)) {

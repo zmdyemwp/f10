@@ -25,7 +25,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AbsListView;
@@ -138,10 +137,8 @@ public class RangerFLink extends Activity {
 	        String mac = intent.getStringExtra("mac");
 
         	//	TODO: onCreate
-	        Log.d("onCreate", page+"::"+mac);
 	        if(null != page &&
 	        		page.contains(BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION)) {
-	        	Log.d("++++++LINK LOST!!", page+"::"+mac);
 	        	fragmentTransaction.replace(R.id.fragment1,
 	        			LossLinkNotification.newInstance(getIndex(mac)));
 	        	fragmentTransaction.addToBackStack(null).commit();
@@ -163,8 +160,6 @@ public class RangerFLink extends Activity {
     protected void onResume() {
     	super.onResume();
 
-    	Log.d(tag, "++++++++OnResume()");
-    	
     	if(bCancle) {
     		bCancle = false;
     		finish();

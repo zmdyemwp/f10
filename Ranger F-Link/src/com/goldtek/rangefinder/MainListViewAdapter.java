@@ -16,8 +16,11 @@ public class MainListViewAdapter extends MainAdapter {
 
 	private static final String tag = "MainListViewAdapter";
 
+	Context context;
+	
 	public MainListViewAdapter(Context cc) {
 		super(cc);
+		context = cc;
 	}
 
 	private static ArrayList<BluetoothDevice> lostDevices;
@@ -74,7 +77,7 @@ public class MainListViewAdapter extends MainAdapter {
 			v = inflater.inflate(R.layout.listview_dev_item, null);
 		}
 		try {
-			String address = listDevices.get(position).getAddress();
+			final String address = listDevices.get(position).getAddress();
 			//Log.d(tag, String.format("[%d]%s", position, address));
 			if(this.checkDeviceLost(address)) {
 				v.setBackground(c.getResources().getDrawable(R.drawable.red_round_rect));
@@ -82,10 +85,17 @@ public class MainListViewAdapter extends MainAdapter {
 			ItemDetail i = ((RangerFLink)c).getItem(address);
 			((ImageView)v.findViewById(R.id.imageView1)).setImageBitmap(i.getThumbnail());
 			((TextView)v.findViewById(R.id.textView1)).setText(i.getName());
+			v.findViewById(R.id.disconnect).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View v) {
+							((RangerFLink)context).disconnectBleDevice(address);
+							MainListViewAdapter.this.notifyDataSetChanged();
+						}
+					});
 		} catch(Throwable e) {
 			//Log.d(tag, ""+position+": "+e.getLocalizedMessage());
 		}
 		return v;
 	}
-
 }

@@ -66,7 +66,10 @@ public class BluetoothLeService extends Service {
 		public void onConnectionStateChange(BluetoothGatt gatt, int status,
 				int newState) {
 			if(bCallBackBlock) {
-				return ;
+				return;
+			}
+			if( ! checkBluetoothReady()) {
+				return;
 			}
 
 			if (newState == BluetoothProfile.STATE_CONNECTED) {
@@ -755,6 +758,20 @@ public class BluetoothLeService extends Service {
 			}
 		}
 		return false;
+	}
+	
+	boolean checkBluetoothReady() {
+		BluetoothManager bm =
+        		(BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothAdapter ba = bm.getAdapter();
+        if(null == ba) {
+            return false;
+        }
+        //	Ask to turn on Bluetooth
+        if (!ba.isEnabled()) {
+        	return false;
+        }
+        return true;
 	}
 
 }

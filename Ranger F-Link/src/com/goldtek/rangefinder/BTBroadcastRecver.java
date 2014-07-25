@@ -35,13 +35,14 @@ public class BTBroadcastRecver extends BroadcastReceiver {
 	}
 	
 	void TerminateMainActivity(Context c) {
-		Intent i = new Intent();
+		/*Intent i = new Intent();
 		i.setClassName("com.goldtek.rangefinder",
 				"com.goldtek.rangefinder.RangerFLink");
 		i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		i.setAction(RangerFLink.TERMINATOR);
 		i.addCategory(Intent.CATEGORY_LAUNCHER);
-		c.startActivity(i);
+		c.startActivity(i);*/
+		android.os.Process.killProcess(android.os.Process.myPid());
 	}
 
 }

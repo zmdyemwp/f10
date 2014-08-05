@@ -7,5 +7,7 @@
     <color name="red">#ff0000</color>
     <color name="green">#00ff00</color>
     <color name="dark_green">#00aa00</color>
+    <color name="button_gray">#606060</color>
+    <color name="button_black">#000000</color>
     
 </resources>

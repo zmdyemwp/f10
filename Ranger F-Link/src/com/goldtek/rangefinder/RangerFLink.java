@@ -23,7 +23,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.view.Menu;
@@ -117,6 +116,9 @@ public class RangerFLink extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        MainLifeCycle ml = new MainLifeCycle();
+        this.getApplication().registerActivityLifecycleCallbacks(ml);
+        
         Intent i = new Intent();
 		i.setClassName("com.goldtek.rangefinder", "com.goldtek.rangefinder.BluetoothLeService");
 		startService(i);

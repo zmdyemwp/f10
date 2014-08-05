@@ -24,6 +24,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
 
+
 public class BluetoothLeService extends Service {
 
 	private final static String TAG = BluetoothLeService.class.getSimpleName();
@@ -83,21 +84,24 @@ public class BluetoothLeService extends Service {
 				// TODO: check if the device is belong to loss-link list
 				// if it does, this is a reconnection
 				final String mac = gatt.getDevice().getAddress();
-				if (checkDevLost(mac) && !confirmDev.contains(gatt) && checkDevConnected(mac)) {
-					confirmDev.add(gatt);
-					/*Intent i = new Intent();
-					i.setClassName("com.goldtek.rangefinder",
-							"com.goldtek.rangefinder.RangerFLink");
-					i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-					i.putExtra("page",
-							BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION);
-					i.putExtra("mac", mac);
-					i.setAction(Intent.ACTION_MAIN);
-					i.addCategory(Intent.CATEGORY_LAUNCHER);
-					startActivity(i);
-					try {
-						Thread.sleep(500);
-					} catch (Throwable e) {}*/
+				//if (checkDevLost(mac) && !confirmDev.contains(gatt) && checkDevConnected(mac)) {
+				if (checkDevLost(mac) && checkDevConnected(mac)) {
+					//confirmDev.add(gatt);
+					if(!MainLifeCycle.isVisible()) {
+						Intent i = new Intent();
+						i.setClassName("com.goldtek.rangefinder",
+								"com.goldtek.rangefinder.RangerFLink");
+						i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						i.putExtra("page",
+								BluetoothLeService.LOSS_LINK_ALARM_RECONNECTION);
+						i.putExtra("mac", mac);
+						i.setAction(Intent.ACTION_MAIN);
+						i.addCategory(Intent.CATEGORY_LAUNCHER);
+						startActivity(i);
+						try {
+							Thread.sleep(500);
+						} catch (Throwable e) {}
+					}
 					broadcastUpdate(LOSS_LINK_ALARM, gatt.getDevice()
 							.getAddress(), LOSS_LINK_ALARM_RECONNECTION);
 				}
@@ -107,25 +111,27 @@ public class BluetoothLeService extends Service {
 				// if it does, this is a loss link!
 				final String mac = gatt.getDevice().getAddress();
 				try {
-					confirmDev.remove(gatt);
+					//confirmDev.remove(gatt);
 				} catch(Throwable e) {};
 				if (checkGattExist(mac)) {
 					//	close old GATT connection and make a new one.
 					refreshConn(gatt);
-					//if(!lostDev.contains(gatt)) {
-					if(!checkLostDev(mac)) {
+					//if(!checkLostDev(mac)) {
+					if(true) {
+						if(!MainLifeCycle.isVisible()) {
+							Intent i = new Intent();
+							i.setClassName("com.goldtek.rangefinder",
+									"com.goldtek.rangefinder.RangerFLink");
+							i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							i.putExtra("page",
+									BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
+							i.putExtra("mac", mac);
+							i.setAction(Intent.ACTION_MAIN);
+							i.addCategory(Intent.CATEGORY_LAUNCHER);
+							startActivity(i);
+						}
 						lostDev.add(gatt);
 						PrefAddLostDev(mac);
-						Intent i = new Intent();
-						i.setClassName("com.goldtek.rangefinder",
-								"com.goldtek.rangefinder.RangerFLink");
-						i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-						i.putExtra("page",
-								BluetoothLeService.LOSS_LINK_ALARM_DISCONNECTION);
-						i.putExtra("mac", mac);
-						i.setAction(Intent.ACTION_MAIN);
-						i.addCategory(Intent.CATEGORY_LAUNCHER);
-						startActivity(i);
 						try {
 							Thread.sleep(500);
 						} catch (Throwable e) {
@@ -360,6 +366,7 @@ public class BluetoothLeService extends Service {
 	 */
 	void removeConn(BluetoothGatt conn) {
 		while(mBluetoothGatts.contains(conn)) {
+			//Log.d(TAG, "removeConn()::"+conn.getDevice().getAddress());
 			mBluetoothGatts.remove(conn);
 		}
 		conn.disconnect();
@@ -474,15 +481,20 @@ public class BluetoothLeService extends Service {
 	}
 
 	public void disconnect(final String address) {
-		BluetoothGatt targetConn = null;
+		ArrayList<BluetoothGatt> temp = new ArrayList<BluetoothGatt>();
+		ArrayList<BluetoothGatt> del = new ArrayList<BluetoothGatt>();
 		for (BluetoothGatt conn : mBluetoothGatts) {
-			if (address.equals(conn.getDevice().getAddress())) {
-				targetConn = conn;
-				break;
+			if (!address.equals(conn.getDevice().getAddress())) {
+				temp.add(conn);
+			} else {
+				del.add(conn);
 			}
 		}
-		if (null != targetConn) {
-			removeConn(targetConn);
+		mBluetoothGatts.clear();
+		mBluetoothGatts = temp;
+		for(BluetoothGatt dev:del) {
+			dev.disconnect();
+			dev.close();
 		}
 		PrefRemoveLostDev(address);
 	}
@@ -721,7 +733,7 @@ public class BluetoothLeService extends Service {
 	 * Device list: keep devices waiting for confirm.
 	 *	Use this list to avoid repeatedly showing confirm page. 
 	 */
-	static ArrayList<BluetoothGatt> confirmDev = new ArrayList<BluetoothGatt>();
+	//static ArrayList<BluetoothGatt> confirmDev = new ArrayList<BluetoothGatt>();
 
 	/**
 	 * Lost Link List Keep all lost link try to reconnect to the device wait for
